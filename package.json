@@ -24,6 +24,7 @@
     "package": "web-ext build --source-dir dist --overwrite-dest",
     "sign": "web-ext sign --source-dir dist",
     "test": "NODE_OPTIONS='--max-old-space-size=16384' jest --config tests/jest.config.cjs",
+    "test:coverage": "NODE_OPTIONS='--max-old-space-size=16384' jest --config tests/jest.config.cjs --coverage",
     "test:watch": "jest --config tests/jest.config.cjs --watch",
     "test:e2e": "playwright test --config tests/playwright.config.ts",
     "test:e2e:headed": "playwright test --config tests/playwright.config.ts --headed",
