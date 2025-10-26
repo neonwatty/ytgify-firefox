@@ -67,10 +67,16 @@ export class GifJsEncoder extends AbstractEncoder {
   }
 
   isAvailable(): boolean {
-    return typeof window !== 'undefined' && 'GIF' in window;
+    // gif.js requires DOM access (document, window) - not available in service workers
+    return typeof window !== 'undefined' && typeof document !== 'undefined' && 'GIF' in window;
   }
 
   async initialize(): Promise<void> {
+    // Check if we're in a service worker context (no DOM)
+    if (typeof document === 'undefined') {
+      throw new Error('gif.js encoder requires DOM access and cannot run in service worker context');
+    }
+
     if (this.isAvailable()) return;
 
     // Dynamically load gif.js if not available

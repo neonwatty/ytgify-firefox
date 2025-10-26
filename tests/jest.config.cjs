@@ -15,6 +15,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': '<rootDir>/tests/unit/__mocks__/styleMock.js',
+    '^gifski-wasm$': '<rootDir>/tests/unit/__mocks__/gifski-wasm.js',
   },
   setupFilesAfterEnv: ['<rootDir>/tests/unit/__mocks__/setup.ts'],
   collectCoverageFrom: [
@@ -35,6 +36,6 @@ module.exports = {
   },
   // Support for async/await in tests
   transformIgnorePatterns: [
-    'node_modules/(?!(puppeteer|@puppeteer)/)',
+    'node_modules/(?!(puppeteer|@puppeteer|gifski-wasm)/)',
   ],
 };

@@ -156,4 +156,32 @@ export class SuccessPage {
       timeout
     );
   }
+
+  /**
+   * Check if Stay Connected button is present
+   */
+  async hasStayConnectedButton(): Promise<boolean> {
+    try {
+      const xpath = '//button[contains(text(), "Stay Connected")]';
+      const element = await this.driver.findElement(By.xpath(xpath));
+      return await element.isDisplayed();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Click Stay Connected button
+   */
+  async clickStayConnected(): Promise<void> {
+    const xpath = '//button[contains(text(), "Stay Connected")]';
+    const element = await this.driver.findElement(By.xpath(xpath));
+    await element.click();
+    await sleep(this.driver, 500);
+  }
+
+  // Aliases for backward compatibility
+  async waitForSuccess(timeout?: number): Promise<void> {
+    await this.waitForScreen(timeout);
+  }
 }

@@ -80,6 +80,30 @@ const PopupApp: React.FC = () => {
     setShowFooter(false);
   };
 
+  const handleStayConnected = async () => {
+    try {
+      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+      const currentTab = tabs[0];
+
+      if (!currentTab?.id) {
+        console.error('No active tab found');
+        return;
+      }
+
+      console.log('[Popup] Sending SHOW_NEWSLETTER_WIZARD to tab:', currentTab.id);
+
+      await browser.tabs.sendMessage(currentTab.id, {
+        type: 'SHOW_NEWSLETTER_WIZARD'
+      });
+
+      console.log('[Popup] Message sent successfully, closing popup');
+      window.close();
+    } catch (error) {
+      console.error('Failed to show newsletter:', error);
+      alert(`Failed to show newsletter wizard: ${error.message}\n\nMake sure you're on a YouTube page.`);
+    }
+  };
+
   const handleCreateGif = async () => {
     if (!isYouTubePage) {
       // Open YouTube in new tab
@@ -94,7 +118,7 @@ const PopupApp: React.FC = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
       const tabs = await browser.tabs.query({ active: true, currentWindow: true });
       const currentTab = tabs[0];
@@ -236,6 +260,23 @@ const PopupApp: React.FC = () => {
               <span className="shortcut-key">G</span>
               <span className="shortcut-text">Quick access</span>
             </div>
+
+            {/* Stay Connected Button */}
+            <button
+              onClick={handleStayConnected}
+              className="popup-stay-connected-btn"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span>Stay Connected</span>
+            </button>
+            <p className="popup-stay-connected-subtitle">Reviews, Feedback, & Updates</p>
           </div>
         ) : (
           <div className="popup-empty-state">
