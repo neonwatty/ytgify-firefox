@@ -143,8 +143,9 @@ export class EncoderFactory {
    * Automatically select the best GIF encoder based on environment and performance
    */
   private async selectBestGifEncoder(): Promise<AbstractEncoder | null> {
-    // Priority order: gifski (highest quality) -> gif.js (quality with dithering) -> gifenc (fast fallback)
-    const encoderPriority: EncoderType[] = ['gifski', 'gif.js', 'gifenc'];
+    // Priority order for Firefox: gif.js (reliable, high quality with Stucki-serpentine) -> gifenc (fast fallback) -> gifski (WASM issues in Firefox)
+    // gifski-wasm has CSP and WASM loading issues in Firefox extension content scripts
+    const encoderPriority: EncoderType[] = ['gif.js', 'gifenc', 'gifski'];
 
     for (const encoderType of encoderPriority) {
       const encoder = await this.getSpecificEncoder(encoderType);
@@ -162,7 +163,7 @@ export class EncoderFactory {
    */
   private async getAnyAvailableGifEncoder(): Promise<AbstractEncoder | null> {
     // Same priority as selectBestGifEncoder for consistency
-    const allEncoders: EncoderType[] = ['gifski', 'gif.js', 'gifenc'];
+    const allEncoders: EncoderType[] = ['gif.js', 'gifenc', 'gifski'];
 
     for (const encoderType of allEncoders) {
       try {
@@ -210,7 +211,7 @@ export class EncoderFactory {
     characteristics: AbstractEncoder['characteristics'];
     supportedFormats: string[];
   }>> {
-    const encoderTypes: EncoderType[] = ['gifski', 'gif.js', 'gifenc'];
+    const encoderTypes: EncoderType[] = ['gif.js', 'gifenc', 'gifski'];
     const results = [];
 
     for (const type of encoderTypes) {
