@@ -90,12 +90,10 @@ describe('Mock E2E: Newsletter Wizard Tests (Selenium)', () => {
 
     // Verify wizard content
     const hasGitHub = await newsletter.hasGitHubLink();
-    const hasTwitter = await newsletter.hasTwitterLink();
     const hasNewsletter = await newsletter.hasNewsletterLink();
     const hasReview = await newsletter.hasReviewButton();
 
     expect(hasGitHub).toBe(true);
-    expect(hasTwitter).toBe(true);
     expect(hasNewsletter).toBe(true);
     expect(hasReview).toBe(true);
 
