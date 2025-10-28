@@ -140,10 +140,12 @@ export class NewsletterWizardPage {
    */
   async waitForClose(timeout = 3000): Promise<boolean> {
     try {
+      // Wait for the element to no longer be present in the DOM
       await this.driver.wait(
-        until.stalenessOf(
-          await this.driver.findElement(By.id('ytgif-newsletter-wizard-root'))
-        ),
+        async () => {
+          const elements = await this.driver.findElements(By.id('ytgif-newsletter-wizard-root'));
+          return elements.length === 0;
+        },
         timeout
       );
       return true;
