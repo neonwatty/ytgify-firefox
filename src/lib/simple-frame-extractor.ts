@@ -23,6 +23,84 @@ export interface SimpleFrameExtractionResult {
   };
 }
 
+/**
+ * Wait for video to be ready for frame capture at current time
+ * Checks both readyState and buffering progress
+ */
+async function waitForVideoReady(
+  videoElement: HTMLVideoElement,
+  targetTime: number,
+  maxWaitMs = 3000
+): Promise<{ ready: boolean; reason?: string }> {
+  const startWait = performance.now();
+  let lastBufferCheck = 0;
+  let stuckCount = 0;
+  let lastReadyState = videoElement.readyState;
+  let readyStateStuckCount = 0;
+
+  while (performance.now() - startWait < maxWaitMs) {
+    const currentReadyState = videoElement.readyState;
+
+    // Detect if readyState is stuck at 0 or 1 (network issue, geo-restriction)
+    if (currentReadyState === lastReadyState && currentReadyState < 2) {
+      readyStateStuckCount++;
+      if (readyStateStuckCount >= 40) {
+        // 40 * 25ms = 1000ms
+        logger.error(
+          `[SimpleFrameExtractor] Video readyState stuck at ${currentReadyState} for 1s`
+        );
+        return { ready: false, reason: 'readyState_stuck' };
+      }
+    } else {
+      readyStateStuckCount = 0;
+    }
+    lastReadyState = currentReadyState;
+
+    // Check if we have enough data (HAVE_CURRENT_DATA = 2+)
+    if (currentReadyState >= 2) {
+      // Verify video has actually buffered this position
+      const buffered = videoElement.buffered;
+      let isBuffered = false;
+      let nearestBufferEnd = 0;
+
+      for (let i = 0; i < buffered.length; i++) {
+        const rangeStart = buffered.start(i);
+        const rangeEnd = buffered.end(i);
+
+        if (rangeStart <= targetTime && rangeEnd >= targetTime) {
+          isBuffered = true;
+          break;
+        }
+
+        if (rangeEnd > nearestBufferEnd) {
+          nearestBufferEnd = rangeEnd;
+        }
+      }
+
+      if (isBuffered) {
+        return { ready: true };
+      }
+
+      // Track if buffering is making progress
+      if (nearestBufferEnd === lastBufferCheck && nearestBufferEnd < targetTime) {
+        stuckCount++;
+        if (stuckCount >= 20) {
+          // 500ms stuck
+          return { ready: false, reason: 'buffer_not_progressing' };
+        }
+      } else {
+        stuckCount = 0;
+      }
+      lastBufferCheck = nearestBufferEnd;
+    }
+
+    const delay = currentReadyState === 0 ? 100 : currentReadyState === 1 ? 50 : 25;
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+
+  return { ready: false, reason: 'timeout' };
+}
+
 export async function extractFramesSimple(
   videoElement: HTMLVideoElement,
   options: SimpleFrameExtractionOptions,
@@ -99,6 +177,9 @@ export async function extractFramesSimple(
 
     // Capture frames by incrementing currentTime
     logger.info('[SimpleFrameExtractor] Starting frame capture loop', { targetFrameCount });
+    const TOTAL_WAIT_BUDGET_MS = 120000; // 120s total wait budget
+    const waitBudgetStart = performance.now();
+
     for (let i = 0; i < targetFrameCount; i++) {
       const captureTime = options.startTime + i * frameInterval;
 
@@ -108,9 +189,34 @@ export async function extractFramesSimple(
       // Set video to capture time
       videoElement.currentTime = Math.min(captureTime, options.endTime);
 
-      // Delay to let video seek to keyframe and render (increased for test reliability)
-      logger.debug(`[SimpleFrameExtractor] Waiting 500ms for frame to render`);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Wait for video to be ready before capturing frame
+      logger.debug(`[SimpleFrameExtractor] Waiting for video to be ready at ${captureTime.toFixed(2)}s`);
+      const remainingBudget = TOTAL_WAIT_BUDGET_MS - (performance.now() - waitBudgetStart);
+      if (remainingBudget <= 0) {
+        logger.error('[SimpleFrameExtractor] Total wait budget exhausted');
+        throw createError(
+          'video',
+          'Video buffering taking too long. Try a shorter clip or better network connection.'
+        );
+      }
+
+      const maxWait = Math.min(3000, remainingBudget);
+      const readyResult = await waitForVideoReady(videoElement, captureTime, maxWait);
+
+      if (!readyResult.ready) {
+        logger.error(`[SimpleFrameExtractor] Video not ready after ${maxWait}ms: ${readyResult.reason}`);
+
+        let errorMessage = 'Video failed to buffer properly. ';
+        if (readyResult.reason === 'readyState_stuck') {
+          errorMessage += 'Network issue or video unavailable. Try reloading the page.';
+        } else if (readyResult.reason === 'buffer_not_progressing') {
+          errorMessage += 'Buffering stalled. Try a shorter clip or wait for better network.';
+        } else {
+          errorMessage += 'Try a shorter clip or better network connection.';
+        }
+
+        throw createError('video', errorMessage);
+      }
 
       // Capture frame
       ctx.clearRect(0, 0, width, height);

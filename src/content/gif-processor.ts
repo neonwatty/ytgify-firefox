@@ -406,6 +406,8 @@ export class ContentScriptGifProcessor {
     this.initializeCanvases(actualWidth, actualHeight);
 
     const frames: HTMLCanvasElement[] = [];
+    let consecutiveDuplicates = 0;
+    const MAX_CONSECUTIVE_DUPLICATES = Math.max(5, Math.min(30, Math.ceil(frameRate)));
 
     // Store original state
     const originalTime = videoElement.currentTime;
@@ -426,26 +428,41 @@ export class ContentScriptGifProcessor {
       const previousTime = videoElement.currentTime;
       videoElement.currentTime = captureTime;
 
-      // Wait for seek to complete using a combination of methods
+      // Enhanced seek verification with buffering check
       // First, wait a bit for the seek to initiate
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Then poll to check if we're close to the target time
+      // Then poll to check if we're close to the target time AND video is buffered
       let attempts = 0;
       const maxAttempts = 20; // 20 * 25ms = 500ms max wait
       let lastCheckedTime = videoElement.currentTime;
 
       // Keep polling until either:
-      // 1. We're close to the target time, OR
+      // 1. We're close to the target time AND ready, OR
       // 2. The video has stopped moving (stuck), OR
       // 3. We've hit the max attempts
       while (attempts < maxAttempts) {
         const currentVideoTime = videoElement.currentTime;
         const distanceToTarget = Math.abs(currentVideoTime - captureTime);
 
-        // If we're close enough to target, we're done
+        // If we're close enough to target, check if video is ready
         if (distanceToTarget < 0.05) {
-          break;
+          // Verify readyState and buffering
+          if (videoElement.readyState >= 2) {
+            // HAVE_CURRENT_DATA or better
+            // Check if this position is actually buffered
+            let isBuffered = false;
+            const buffered = videoElement.buffered;
+            for (let j = 0; j < buffered.length; j++) {
+              if (buffered.start(j) <= captureTime && buffered.end(j) >= captureTime) {
+                isBuffered = true;
+                break;
+              }
+            }
+            if (isBuffered) {
+              break; // Ready to capture
+            }
+          }
         }
 
         // If the video hasn't moved in the last few attempts, it might be stuck
@@ -492,9 +509,21 @@ export class ContentScriptGifProcessor {
         const lastFrame = frames[frames.length - 1];
         if (areCanvasFramesSimilar(this.mainCanvas!, lastFrame)) {
           isDuplicate = true;
+          consecutiveDuplicates++;
           logger.warn(
-            `[ContentScriptGifProcessor] ⚠️ DUPLICATE FRAME at ${i + 1}/${frameCount}: video stuck at ${videoElement.currentTime.toFixed(3)}s (wanted ${captureTime.toFixed(3)}s, prev was ${previousTime.toFixed(3)}s)`
+            `[ContentScriptGifProcessor] ⚠️ DUPLICATE FRAME at ${i + 1}/${frameCount}: video stuck at ${videoElement.currentTime.toFixed(3)}s (wanted ${captureTime.toFixed(3)}s, prev was ${previousTime.toFixed(3)}s) [consecutive: ${consecutiveDuplicates}/${MAX_CONSECUTIVE_DUPLICATES}]`
           );
+
+          // Abort if we have too many consecutive duplicates (video stuck)
+          if (consecutiveDuplicates >= MAX_CONSECUTIVE_DUPLICATES) {
+            logger.error(
+              `[ContentScriptGifProcessor] Aborting: ${consecutiveDuplicates} consecutive duplicate frames. Video buffering stuck.`
+            );
+            throw createError(
+              'video',
+              `Video buffering stuck (${consecutiveDuplicates} consecutive identical frames). Network too slow or video unavailable. Try a shorter clip or better network.`
+            );
+          }
 
           // Try one more aggressive seek attempt if we have a duplicate
           if (Math.abs(videoElement.currentTime - captureTime) > 0.01) {
@@ -517,12 +546,16 @@ export class ContentScriptGifProcessor {
               this.mainCtx!.clearRect(0, 0, actualWidth, actualHeight);
               this.mainCtx!.drawImage(this.recoveryCanvas!, 0, 0);
               isDuplicate = false;
+              consecutiveDuplicates = 0; // Reset consecutive counter on recovery
             } else {
               logger.warn(
                 `[ContentScriptGifProcessor] Recovery failed, still stuck at ${videoElement.currentTime.toFixed(3)}s`
               );
             }
           }
+        } else {
+          // Frame is different, reset consecutive duplicate counter
+          consecutiveDuplicates = 0;
         }
       }
 
