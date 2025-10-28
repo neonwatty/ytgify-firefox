@@ -81,6 +81,13 @@ class YouTubeGifMaker {
       }
     });
 
+    // Listen for messages from the overlay wizard to open newsletter wizard
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'OPEN_NEWSLETTER_WIZARD') {
+        this.showNewsletterWizard();
+      }
+    });
+
     // openGifWizard functionality is available via keyboard shortcuts and GIF button
     // No script injection needed - removed for Chrome Web Store compliance
   }

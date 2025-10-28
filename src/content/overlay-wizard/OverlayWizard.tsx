@@ -256,8 +256,9 @@ const OverlayWizard: React.FC<OverlayWizardProps> = ({
                 goToScreen('quick-capture');
               }}
               onFeedback={() => {
-                // Go to feedback screen
-                goToScreen('feedback');
+                // Open standalone newsletter wizard
+                // Send message to content script to show newsletter wizard
+                window.postMessage({ type: 'OPEN_NEWSLETTER_WIZARD' }, '*');
               }}
               onClose={onClose}
               gifSize={data.gifSize}
