@@ -73,7 +73,7 @@ jobs:
 
   mock-e2e-tests:
     name: Mock E2E Tests (Shard ${{ matrix.shard }}/3)
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     needs: test
     strategy:
@@ -81,11 +81,11 @@ jobs:
       matrix:
         include:
           - shard: 1
-            pattern: "wizard-basic|wizard-settings-matrix|newsletter-wizard"
+            pattern: "wizard-settings-matrix|error-handling|debug-frame-capture"
           - shard: 2
-            pattern: "error-handling|gif-output-validation|diagnostic-video"
+            pattern: "wizard-basic|gif-output-validation|debug-gif-parser"
           - shard: 3
-            pattern: "debug-frame-capture|debug-gif-parser|debug-gif-settings"
+            pattern: "newsletter-wizard|diagnostic-video|debug-gif-settings"
 
     steps:
       - name: Checkout code
