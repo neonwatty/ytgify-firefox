@@ -35,7 +35,7 @@ describe('Mock E2E: Basic Wizard Tests (Selenium)', () => {
 
     const headless = process.env.HEADLESS !== 'false';
     driver = await createFirefoxDriver(undefined, headless);
-  }, 30000);
+  }, 20000);
 
   afterEach(async () => {
     if (driver) {
@@ -167,31 +167,31 @@ describe('Mock E2E: Basic Wizard Tests (Selenium)', () => {
     expect(videoReady).toBe(true);
 
     console.log('✅ [Mock Test] Video loaded and ready!');
-  }, 90000);
+  }, 60000);
 
   // ========== GIF Creation Tests ==========
 
   it('Can create a simple GIF', async () => {
     await testGifCreationBasic();
-  }, 90000);
+  }, 60000);
 
   it('Can create GIF with specific resolution and validate output', async () => {
     const { gifUrl } = await createGifWithSettings({ resolution: '240p' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ GIF created: ${metadata.width}x${metadata.height}`);
-  }, 90000);
+  }, 60000);
 
   it('Can create GIF with specific FPS and validate output', async () => {
     const { gifUrl } = await createGifWithSettings({ fps: '10' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ GIF created: ${metadata.fps} fps, ${metadata.frameCount} frames`);
-  }, 90000);
+  }, 60000);
 
   it('Can create GIF with specific length and validate output', async () => {
     const { gifUrl } = await createGifWithSettings({ resolution: '144p', fps: '5' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ GIF created: ${metadata.duration.toFixed(1)}s duration`);
-  }, 90000);
+  }, 60000);
 
   // ========== Settings Tests ==========
 
@@ -307,7 +307,7 @@ describe('Mock E2E: Basic Wizard Tests (Selenium)', () => {
     expect(metadata.fps).toBeGreaterThanOrEqual(8);
     expect(metadata.fps).toBeLessThanOrEqual(12);
     console.log(`✅ Frame rate validated: ${metadata.fps} fps`);
-  }, 90000);
+  }, 60000);
 
   it('Verify aspect ratio preservation', async () => {
     const { gifUrl } = await createGifWithSettings({ resolution: '240p' });
@@ -317,14 +317,14 @@ describe('Mock E2E: Basic Wizard Tests (Selenium)', () => {
     expect(aspectRatio).toBeGreaterThan(1);
 
     console.log(`✅ Aspect ratio preserved: ${aspectRatio.toFixed(2)}`);
-  }, 90000);
+  }, 60000);
 
   it('Verify duplicate frame detection and recovery', async () => {
     const { gifUrl } = await createGifWithSettings({ fps: '5' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     expect(metadata.frameCount).toBeGreaterThan(0);
     console.log(`✅ Duplicate frame handling validated: ${metadata.frameCount} frames`);
-  }, 90000);
+  }, 60000);
 
   it('Timeline handles short video boundary correctly - prevents overflow', async () => {
     const youtube = new YouTubePage(driver);

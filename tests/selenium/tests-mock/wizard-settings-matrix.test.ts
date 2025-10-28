@@ -35,7 +35,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const headless = process.env.HEADLESS !== 'false';
     driver = await createFirefoxDriver(undefined, headless);
-  }, 30000);
+  }, 20000);
 
   afterEach(async () => {
     if (driver) {
@@ -126,7 +126,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     expect(metadata.height).toBeGreaterThan(0);
 
     console.log(`✅ 144p: ${metadata.width}x${metadata.height}, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Resolution 240p: Creates GIF successfully', async () => {
     const { gifUrl, selectedRes } = await createAndValidateGif({
@@ -141,7 +141,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     expect(metadata.height).toBeGreaterThan(0);
 
     console.log(`✅ 240p: ${metadata.width}x${metadata.height}, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Resolution 360p: Creates GIF successfully', async () => {
     const { gifUrl, selectedRes } = await createAndValidateGif({
@@ -156,7 +156,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     expect(metadata.height).toBeGreaterThan(0);
 
     console.log(`✅ 360p: ${metadata.width}x${metadata.height}, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Resolution 480p: Creates GIF successfully', async () => {
     const { gifUrl, selectedRes } = await createAndValidateGif({
@@ -171,7 +171,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     expect(metadata.height).toBeGreaterThan(0);
 
     console.log(`✅ 480p: ${metadata.width}x${metadata.height}, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   // ========== Frame Rate Options Matrix ==========
 
@@ -180,21 +180,21 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ 5 fps: ${metadata.fps} fps, ${metadata.frameCount} frames`);
-  }, 90000);
+  }, 60000);
 
   it('Frame rate 10 fps: Creates GIF successfully', async () => {
     const { gifUrl } = await createAndValidateGif({ fps: '10' });
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ 10 fps: ${metadata.fps} fps, ${metadata.frameCount} frames`);
-  }, 90000);
+  }, 60000);
 
   it('Frame rate 15 fps: Creates GIF successfully', async () => {
     const { gifUrl } = await createAndValidateGif({ fps: '15' });
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ 15 fps: ${metadata.fps} fps, ${metadata.frameCount} frames`);
-  }, 90000);
+  }, 60000);
 
   // ========== Duration Options Matrix ==========
 
@@ -202,31 +202,31 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     const { gifUrl } = await createAndValidateGif({ resolution: '144p', fps: '5' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ ~1s duration: ${metadata.duration.toFixed(1)}s`);
-  }, 90000);
+  }, 60000);
 
   it('Duration ~3 seconds: Creates GIF successfully', async () => {
     const { gifUrl } = await createAndValidateGif({ resolution: '144p', fps: '5' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ ~3s duration: ${metadata.duration.toFixed(1)}s`);
-  }, 90000);
+  }, 60000);
 
   it('Duration ~5 seconds: Creates GIF successfully', async () => {
     const { gifUrl } = await createAndValidateGif({ resolution: '144p', fps: '5' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ ~5s duration: ${metadata.duration.toFixed(1)}s`);
-  }, 90000);
+  }, 60000);
 
   it('Duration ~7 seconds: Creates GIF successfully', async () => {
     const { gifUrl } = await createAndValidateGif({ resolution: '144p', fps: '5' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ ~7s duration: ${metadata.duration.toFixed(1)}s`);
-  }, 90000);
+  }, 60000);
 
   it('Duration ~10 seconds (max): Creates GIF successfully', async () => {
     const { gifUrl } = await createAndValidateGif({ resolution: '144p', fps: '5' });
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ ~10s duration (max): ${metadata.duration.toFixed(1)}s`);
-  }, 90000);
+  }, 60000);
 
   // ========== Combined Settings Matrix ==========
 
@@ -238,7 +238,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ Smallest: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Matrix - Balanced settings: 240p @ 10fps', async () => {
     const { gifUrl } = await createAndValidateGif({
@@ -248,7 +248,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ Balanced: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Matrix - High FPS compact: 360p @ 15fps', async () => {
     const { gifUrl } = await createAndValidateGif({
@@ -258,7 +258,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ High FPS: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Matrix - HD low framerate: 480p @ 5fps', async () => {
     const { gifUrl } = await createAndValidateGif({
@@ -268,7 +268,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ HD low framerate: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Matrix - Maximum quality: 480p @ 15fps', async () => {
     const { gifUrl } = await createAndValidateGif({
@@ -278,7 +278,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const metadata = await extractGifMetadataFromUrl(driver, gifUrl);
     console.log(`✅ Maximum quality: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   // ========== Settings Persistence Test ==========
 
@@ -317,7 +317,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     } catch {
       console.log('[Mock Test] Text overlay screen not available');
     }
-  }, 30000);
+  }, 20000);
 
   // ========== Edge Case Tests ==========
 
@@ -334,7 +334,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     expect(metadata.frameCount).toBeGreaterThan(0);
 
     console.log(`✅ Max settings: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 
   it('Edge case: All minimum settings together', async () => {
     const { gifUrl } = await createAndValidateGif({
@@ -349,5 +349,5 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
     expect(metadata.frameCount).toBeGreaterThan(0);
 
     console.log(`✅ Min settings: ${metadata.width}x${metadata.height} @ ${metadata.fps}fps, ${(metadata.fileSize / 1024).toFixed(1)} KB`);
-  }, 90000);
+  }, 60000);
 });

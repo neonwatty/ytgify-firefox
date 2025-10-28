@@ -30,9 +30,19 @@ module.exports = {
     ],
   },
   extensionsToTreatAsEsm: ['.ts'],
-  testTimeout: 90000, // 90 seconds per test
+  testTimeout: 60000, // 60 seconds per test (reduced from 90s for CI efficiency)
   verbose: true,
   bail: false, // Continue running tests even if one fails
   maxWorkers: 3, // Run 3 tests in parallel
   forceExit: true, // Force Jest to exit after tests complete (needed for Selenium cleanup)
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    // Skip debug tests in CI to reduce execution time
+    ...(process.env.CI ? [
+      'debug-frame-capture.test.ts',
+      'debug-gif-parser.test.ts',
+      'debug-gif-settings.test.ts',
+      'diagnostic-video.test.ts'
+    ] : [])
+  ],
 };
