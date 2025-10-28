@@ -112,8 +112,8 @@ describe('EncoderFactory', () => {
         format: 'gif'
       });
 
-      // gif.js is now the highest priority encoder (Firefox compatibility)
-      expect(result.encoder.name).toBe('gif.js');
+      // gifski is now the highest priority encoder (highest quality)
+      expect(result.encoder.name).toBe('gifski');
       expect(result.reason).toBe('Auto-selected based on performance characteristics');
     });
 
@@ -125,8 +125,8 @@ describe('EncoderFactory', () => {
         format: 'gif'
       });
 
-      // gif.js is first in fallback order now (Firefox compatibility)
-      expect(result.encoder.name).toBe('gif.js');
+      // gifski is first in fallback order now (highest quality)
+      expect(result.encoder.name).toBe('gifski');
       expect(result.reason).toBe('Emergency fallback to any available encoder');
     });
 
@@ -196,8 +196,8 @@ describe('EncoderFactory', () => {
 
     it('should auto-select when type is auto', async () => {
       const encoder = await factory.getSpecificEncoder('auto');
-      // Now gif.js is prioritized first (Firefox compatibility), so auto should select gif.js
-      expect(encoder?.name).toBe('gif.js');
+      // gifski is prioritized first (highest quality)
+      expect(encoder?.name).toBe('gifski');
     });
 
     it('should throw error for unknown encoder type', async () => {
@@ -213,9 +213,9 @@ describe('EncoderFactory', () => {
       expect(encoders).toHaveLength(3);
       expect(encoders[0].type).toBe('gifski');
       expect(encoders[0].available).toBe(true);
-      expect(encoders[1].type).toBe('gifenc');
+      expect(encoders[1].type).toBe('gif.js');
       expect(encoders[1].available).toBe(true);
-      expect(encoders[2].type).toBe('gif.js');
+      expect(encoders[2].type).toBe('gifenc');
       expect(encoders[2].available).toBe(true);
     });
 
@@ -226,10 +226,10 @@ describe('EncoderFactory', () => {
 
       const encoders = await factory.getAvailableEncoders();
 
-      // gifski is now first, gifenc is second
+      // gifski is first, gif.js is second, gifenc is third
       expect(encoders[0].available).toBe(true); // gifski
-      expect(encoders[1].available).toBe(false); // gifenc (error)
-      expect(encoders[2].available).toBe(true); // gif.js
+      expect(encoders[1].available).toBe(true); // gif.js
+      expect(encoders[2].available).toBe(false); // gifenc (error)
     });
   });
 
@@ -249,9 +249,9 @@ describe('EncoderFactory', () => {
       expect(results).toHaveLength(3);
       expect(results[0].type).toBe('gifski');
       expect(results[0].available).toBe(true);
-      expect(results[1].type).toBe('gifenc');
+      expect(results[1].type).toBe('gif.js');
       expect(results[1].available).toBe(true);
-      expect(results[2].type).toBe('gif.js');
+      expect(results[2].type).toBe('gifenc');
       expect(results[2].available).toBe(true);
 
       expect(mockGifencEncoder.encode).toHaveBeenCalled();
@@ -263,14 +263,15 @@ describe('EncoderFactory', () => {
 
       const results = await factory.benchmarkEncoders(10);
 
-      // gifski is first, gifenc is second
+      // gifski is first, gif.js is second, gifenc is third
       expect(results[0].type).toBe('gifski');
-      expect(results[1]).toMatchObject({
+      expect(results[1].type).toBe('gif.js');
+      expect(results[2]).toMatchObject({
         name: 'gifenc',
         type: 'gifenc',
         available: false
       });
-      expect(results[1].benchmarkTime).toBeUndefined();
+      expect(results[2].benchmarkTime).toBeUndefined();
     });
 
     it('should handle encoding errors during benchmark', async () => {
@@ -278,8 +279,8 @@ describe('EncoderFactory', () => {
 
       const results = await factory.benchmarkEncoders(10);
 
-      // gifski is first, gifenc is second
-      expect(results[1]).toMatchObject({
+      // gifski is first, gif.js is second, gifenc is third
+      expect(results[2]).toMatchObject({
         name: 'gifenc',
         type: 'gifenc',
         available: false
