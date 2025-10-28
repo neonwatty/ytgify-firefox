@@ -79,7 +79,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        include:
+          - shard: 1
+            pattern: "wizard-basic|wizard-settings-matrix|newsletter-wizard"
+          - shard: 2
+            pattern: "error-handling|gif-output-validation|diagnostic-video"
+          - shard: 3
+            pattern: "debug-frame-capture|debug-gif-parser|debug-gif-settings"
 
     steps:
       - name: Checkout code
@@ -127,7 +133,7 @@ jobs:
       - name: Run mock E2E tests (Shard ${{ matrix.shard }}/3)
         env:
           HEADLESS: true
-        run: npm run test:selenium:mock -- --shard=${{ matrix.shard }}/3
+        run: npm run test:selenium:mock -- --testPathPattern="${{ matrix.pattern }}"
 
       - name: Upload test artifacts on failure
         if: failure()
