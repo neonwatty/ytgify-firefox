@@ -17,6 +17,10 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       filename: '[name].js',
       clean: true,
+      webassemblyModuleFilename: '[name].wasm',
+    },
+    experiments: {
+      asyncWebAssembly: true,
     },
     module: {
       rules: [

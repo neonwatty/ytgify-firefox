@@ -106,28 +106,6 @@ describe('FeedbackScreen', () => {
       expect(svg).toHaveAttribute('height', '20');
     });
 
-    it('should render Twitter/X section heading', () => {
-      render(<FeedbackScreen {...defaultProps} />);
-      const twitterHeading = screen.getByRole('heading', { level: 3, name: 'Follow & Connect' });
-      expect(twitterHeading).toBeInTheDocument();
-    });
-
-    it('should display Twitter/X section description text', () => {
-      render(<FeedbackScreen {...defaultProps} />);
-      expect(screen.getByText('Follow us on X for updates and quick questions:')).toBeInTheDocument();
-    });
-
-    it('should render Twitter/X link with correct text and icon', () => {
-      render(<FeedbackScreen {...defaultProps} />);
-      const twitterLink = screen.getByRole('link', { name: /@neonwatty/i });
-      expect(twitterLink).toBeInTheDocument();
-      expect(twitterLink).toHaveClass('ytgif-feedback-link');
-      // Check for SVG icon within the link
-      const svg = twitterLink.querySelector('svg');
-      expect(svg).toBeInTheDocument();
-      expect(svg).toHaveAttribute('width', '20');
-      expect(svg).toHaveAttribute('height', '20');
-    });
 
     it('should render Back button with arrow icon and text', () => {
       render(<FeedbackScreen {...defaultProps} />);
@@ -157,14 +135,14 @@ describe('FeedbackScreen', () => {
       expect(document.querySelector('.ytgif-feedback-actions')).toBeInTheDocument();
     });
 
-    it('should render both feedback option containers with correct structure', () => {
+    it('should render all feedback option containers with correct structure', () => {
       render(<FeedbackScreen {...defaultProps} />);
       const feedbackOptions = document.querySelectorAll('.ytgif-feedback-option');
       expect(feedbackOptions).toHaveLength(2);
       // First option should be GitHub
       expect(feedbackOptions[0]).toContainElement(screen.getByRole('heading', { name: 'Report Issues & Request Features' }));
-      // Second option should be Twitter/X
-      expect(feedbackOptions[1]).toContainElement(screen.getByRole('heading', { name: 'Follow & Connect' }));
+      // Second option should be Newsletter
+      expect(feedbackOptions[1]).toContainElement(screen.getByRole('heading', { name: 'Stay Updated' }));
     });
   });
 
@@ -380,34 +358,12 @@ describe('FeedbackScreen', () => {
       expect(githubLink).toHaveAttribute('href', 'https://github.com/neonwatty/ytgify');
     });
 
-    it('should have target="_blank" on Twitter/X link', () => {
-      render(<FeedbackScreen {...defaultProps} />);
-      const twitterLink = screen.getByRole('link', { name: /@neonwatty/i });
-      expect(twitterLink).toHaveAttribute('target', '_blank');
-    });
-
-    it('should have security attributes on Twitter/X link', () => {
-      render(<FeedbackScreen {...defaultProps} />);
-      const twitterLink = screen.getByRole('link', { name: /@neonwatty/i });
-      expect(twitterLink).toHaveAttribute('rel', 'noopener noreferrer');
-    });
-
-    it('should have correct href on Twitter/X link', () => {
-      render(<FeedbackScreen {...defaultProps} />);
-      const twitterLink = screen.getByRole('link', { name: /@neonwatty/i });
-      expect(twitterLink).toHaveAttribute('href', 'https://x.com/neonwatty');
-    });
-
-    it('should render GitHub and X SVG icons with correct viewBox', () => {
+    it('should render GitHub SVG icon with correct viewBox', () => {
       render(<FeedbackScreen {...defaultProps} />);
 
       const githubLink = screen.getByRole('link', { name: /GitHub Issues/i });
       const githubSvg = githubLink.querySelector('svg');
       expect(githubSvg).toHaveAttribute('viewBox', '0 0 24 24');
-
-      const twitterLink = screen.getByRole('link', { name: /@neonwatty/i });
-      const twitterSvg = twitterLink.querySelector('svg');
-      expect(twitterSvg).toHaveAttribute('viewBox', '0 0 24 24');
     });
 
     it('should have proper link text content alongside icons', () => {
@@ -415,9 +371,6 @@ describe('FeedbackScreen', () => {
 
       const githubLink = screen.getByRole('link', { name: /GitHub Issues/i });
       expect(githubLink.textContent).toContain('GitHub Issues');
-
-      const twitterLink = screen.getByRole('link', { name: /@neonwatty/i });
-      expect(twitterLink.textContent).toContain('@neonwatty');
     });
   });
 
@@ -534,7 +487,7 @@ describe('FeedbackScreen', () => {
       expect(span?.textContent).toBe('Leave us a review!');
     });
 
-    it('should render support section after feedback options', () => {
+    it('should render support section before feedback options', () => {
       const { container } = render(<FeedbackScreen {...defaultProps} />);
 
       const feedbackContent = container.querySelector('.ytgif-feedback-content');
@@ -544,10 +497,10 @@ describe('FeedbackScreen', () => {
       expect(feedbackOptions).toHaveLength(2);
       expect(supportSection).toBeInTheDocument();
 
-      // Support section should come after feedback options in DOM
+      // Support section should come before feedback options in DOM
       const allChildren = Array.from(feedbackContent?.children || []);
       const supportIndex = allChildren.indexOf(supportSection as Element);
-      expect(supportIndex).toBeGreaterThan(1); // After 2 feedback options
+      expect(supportIndex).toBeLessThan(2); // Before feedback options
     });
 
     it('should call getReviewLink helper for review button', () => {

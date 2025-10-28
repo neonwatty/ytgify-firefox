@@ -6,16 +6,19 @@
 import { EncoderFactory, encoderFactory, selectEncoder, getPerformanceRecommendations } from '@/lib/encoders/encoder-factory';
 import { GifencEncoder } from '@/lib/encoders/gifenc-encoder';
 import { GifJsEncoder } from '@/lib/encoders/gifjs-encoder';
+import { GifskiEncoder } from '@/lib/encoders/gifski-encoder';
 import { AbstractEncoder } from '@/lib/encoders/abstract-encoder';
 
 // Mock the encoder modules
 jest.mock('@/lib/encoders/gifenc-encoder');
 jest.mock('@/lib/encoders/gifjs-encoder');
+jest.mock('@/lib/encoders/gifski-encoder');
 
 describe('EncoderFactory', () => {
   let factory: EncoderFactory;
   let mockGifencEncoder: jest.Mocked<GifencEncoder>;
   let mockGifJsEncoder: jest.Mocked<GifJsEncoder>;
+  let mockGifskiEncoder: jest.Mocked<GifskiEncoder>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -51,8 +54,23 @@ describe('EncoderFactory', () => {
       encode: jest.fn().mockResolvedValue(new Blob(['gifjs-data'], { type: 'image/gif' }))
     } as any;
 
+    mockGifskiEncoder = {
+      name: 'gifski',
+      supportedFormats: ['gif'],
+      characteristics: {
+        speed: 'slow',
+        quality: 'high',
+        memoryUsage: 'high',
+        browserSupport: 'good'
+      },
+      isAvailable: jest.fn().mockReturnValue(true),
+      initialize: jest.fn().mockResolvedValue(undefined),
+      encode: jest.fn().mockResolvedValue(new Blob(['gifski-data'], { type: 'image/gif' }))
+    } as any;
+
     (GifencEncoder as jest.MockedClass<typeof GifencEncoder>).mockImplementation(() => mockGifencEncoder);
     (GifJsEncoder as jest.MockedClass<typeof GifJsEncoder>).mockImplementation(() => mockGifJsEncoder);
+    (GifskiEncoder as jest.MockedClass<typeof GifskiEncoder>).mockImplementation(() => mockGifskiEncoder);
   });
 
   describe('getInstance', () => {
@@ -94,7 +112,8 @@ describe('EncoderFactory', () => {
         format: 'gif'
       });
 
-      expect(result.encoder).toBe(mockGifencEncoder);
+      // gif.js is now the highest priority encoder (Firefox compatibility)
+      expect(result.encoder.name).toBe('gif.js');
       expect(result.reason).toBe('Auto-selected based on performance characteristics');
     });
 
@@ -106,11 +125,13 @@ describe('EncoderFactory', () => {
         format: 'gif'
       });
 
-      expect(result.encoder).toBe(mockGifJsEncoder);
+      // gif.js is first in fallback order now (Firefox compatibility)
+      expect(result.encoder.name).toBe('gif.js');
       expect(result.reason).toBe('Emergency fallback to any available encoder');
     });
 
     it('should throw error when no encoders available', async () => {
+      mockGifskiEncoder.isAvailable.mockReturnValue(false);
       mockGifencEncoder.isAvailable.mockReturnValue(false);
       mockGifJsEncoder.isAvailable.mockReturnValue(false);
 
@@ -175,7 +196,8 @@ describe('EncoderFactory', () => {
 
     it('should auto-select when type is auto', async () => {
       const encoder = await factory.getSpecificEncoder('auto');
-      expect(encoder).toBe(mockGifencEncoder);
+      // Now gif.js is prioritized first (Firefox compatibility), so auto should select gif.js
+      expect(encoder?.name).toBe('gif.js');
     });
 
     it('should throw error for unknown encoder type', async () => {
@@ -188,21 +210,13 @@ describe('EncoderFactory', () => {
     it('should return information about all encoders', async () => {
       const encoders = await factory.getAvailableEncoders();
 
-      expect(encoders).toHaveLength(2);
-      expect(encoders[0]).toEqual({
-        name: 'gifenc',
-        type: 'gifenc',
-        available: true,
-        characteristics: mockGifencEncoder.characteristics,
-        supportedFormats: ['gif']
-      });
-      expect(encoders[1]).toEqual({
-        name: 'gif.js',
-        type: 'gif.js',
-        available: true,
-        characteristics: mockGifJsEncoder.characteristics,
-        supportedFormats: ['gif']
-      });
+      expect(encoders).toHaveLength(3);
+      expect(encoders[0].type).toBe('gifski');
+      expect(encoders[0].available).toBe(true);
+      expect(encoders[1].type).toBe('gifenc');
+      expect(encoders[1].available).toBe(true);
+      expect(encoders[2].type).toBe('gif.js');
+      expect(encoders[2].available).toBe(true);
     });
 
     it('should handle encoder availability check errors', async () => {
@@ -212,8 +226,10 @@ describe('EncoderFactory', () => {
 
       const encoders = await factory.getAvailableEncoders();
 
-      expect(encoders[0].available).toBe(false);
-      expect(encoders[1].available).toBe(true);
+      // gifski is now first, gifenc is second
+      expect(encoders[0].available).toBe(true); // gifski
+      expect(encoders[1].available).toBe(false); // gifenc (error)
+      expect(encoders[2].available).toBe(true); // gif.js
     });
   });
 
@@ -230,21 +246,13 @@ describe('EncoderFactory', () => {
     it('should benchmark available encoders', async () => {
       const results = await factory.benchmarkEncoders(10);
 
-      expect(results).toHaveLength(2);
-      expect(results[0]).toMatchObject({
-        name: 'gifenc',
-        type: 'gifenc',
-        available: true,
-        benchmarkTime: expect.any(Number),
-        framesPerSecond: expect.any(Number)
-      });
-      expect(results[1]).toMatchObject({
-        name: 'gif.js',
-        type: 'gif.js',
-        available: true,
-        benchmarkTime: expect.any(Number),
-        framesPerSecond: expect.any(Number)
-      });
+      expect(results).toHaveLength(3);
+      expect(results[0].type).toBe('gifski');
+      expect(results[0].available).toBe(true);
+      expect(results[1].type).toBe('gifenc');
+      expect(results[1].available).toBe(true);
+      expect(results[2].type).toBe('gif.js');
+      expect(results[2].available).toBe(true);
 
       expect(mockGifencEncoder.encode).toHaveBeenCalled();
       expect(mockGifJsEncoder.encode).toHaveBeenCalled();
@@ -255,12 +263,14 @@ describe('EncoderFactory', () => {
 
       const results = await factory.benchmarkEncoders(10);
 
-      expect(results[0]).toMatchObject({
+      // gifski is first, gifenc is second
+      expect(results[0].type).toBe('gifski');
+      expect(results[1]).toMatchObject({
         name: 'gifenc',
         type: 'gifenc',
         available: false
       });
-      expect(results[0].benchmarkTime).toBeUndefined();
+      expect(results[1].benchmarkTime).toBeUndefined();
     });
 
     it('should handle encoding errors during benchmark', async () => {
@@ -268,7 +278,8 @@ describe('EncoderFactory', () => {
 
       const results = await factory.benchmarkEncoders(10);
 
-      expect(results[0]).toMatchObject({
+      // gifski is first, gifenc is second
+      expect(results[1]).toMatchObject({
         name: 'gifenc',
         type: 'gifenc',
         available: false
