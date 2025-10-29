@@ -3,7 +3,7 @@
  * Uses advanced temporal dithering and cross-frame palette optimization
  */
 
-import encode from 'gifski-wasm';
+import encode, { init as initGifski } from 'gifski-wasm';
 import {
   AbstractEncoder,
   EncodingOptions,
@@ -11,6 +11,8 @@ import {
   EncodingProgress,
   FrameData,
 } from './abstract-encoder';
+
+let gifskiInitialized = false;
 
 export class GifskiEncoder extends AbstractEncoder {
   get name(): string {
@@ -43,8 +45,46 @@ export class GifskiEncoder extends AbstractEncoder {
     if (!this.isAvailable()) {
       throw new Error('gifski-wasm library is not available');
     }
-    // gifski-wasm doesn't need explicit initialization
-    // WASM is loaded automatically on first use
+
+    // Explicitly initialize WASM module in Firefox extension context
+    if (!gifskiInitialized) {
+      try {
+        let wasmInput: Parameters<typeof initGifski>[0];
+
+        try {
+          const chromeApi = (globalThis as typeof globalThis & { chrome?: typeof browser }).chrome;
+          if (typeof browser !== 'undefined' && browser.runtime?.getURL) {
+            const wasmUrl = browser.runtime.getURL('pkg/gifski_wasm_bg.wasm');
+            console.debug('[gifski] Fetching WASM from', wasmUrl);
+            const response = await fetch(wasmUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch gifski wasm: ${response.status} ${response.statusText}`);
+            }
+            const buffer = await response.arrayBuffer();
+            console.debug('[gifski] WASM header bytes', Array.from(new Uint8Array(buffer.slice(0, 4))));
+            wasmInput = buffer;
+          } else if (chromeApi?.runtime?.getURL) {
+            const wasmUrl = chromeApi.runtime.getURL('pkg/gifski_wasm_bg.wasm');
+            console.debug('[gifski] Fetching WASM from', wasmUrl);
+            const response = await fetch(wasmUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch gifski wasm: ${response.status} ${response.statusText}`);
+            }
+            const buffer = await response.arrayBuffer();
+            console.debug('[gifski] WASM header bytes', Array.from(new Uint8Array(buffer.slice(0, 4))));
+            wasmInput = buffer;
+          }
+        } catch (fetchError) {
+          console.warn('[gifski] Falling back to default WASM init', fetchError);
+        }
+
+        await initGifski(wasmInput);
+        gifskiInitialized = true;
+      } catch (error) {
+        console.error('Failed to initialize gifski WASM:', error);
+        throw new Error(`gifski WASM initialization failed: ${error}`);
+      }
+    }
   }
 
   async encode(
@@ -87,19 +127,72 @@ export class GifskiEncoder extends AbstractEncoder {
     this.reportProgress('preparing', 20, 'Preparing frames for encoding');
 
     // Map quality to gifski settings
-    // gifski uses a 'fast' option where true = faster but lower quality
     const qualitySettings = this.mapQualityToGifski(options.quality);
 
     this.reportProgress('encoding', 30, 'Encoding GIF with gifski');
 
-    // Encode using gifski-wasm
-    const gifData = await encode({
+    // Calculate frame durations from delays if available
+    // gifski expects durations in milliseconds
+    const fallbackFrameRate = Math.max(1, options.frameRate || 1);
+    const defaultFrameDuration = 1000 / fallbackFrameRate;
+    const rawDurations = frames.map((frame) =>
+      typeof frame.delay === 'number' ? frame.delay : defaultFrameDuration
+    );
+    const firstDuration = rawDurations[0] ?? defaultFrameDuration;
+    const hasCustomDurations = rawDurations.some(
+      (duration) => Math.abs(duration - firstDuration) > 0.5
+    );
+    const normalizedDurations = rawDurations.map((duration) =>
+      Math.max(2, Math.round(duration))
+    );
+
+    const baseEncodeOptions: {
+      frames: ImageData[];
+      width: number;
+      height: number;
+      quality?: number;
+      repeat?: number;
+    } = {
       frames: imageDataFrames,
-      fps: options.frameRate,
       width: options.width,
       height: options.height,
-      ...qualitySettings,
-    });
+      ...(qualitySettings.quality ? { quality: qualitySettings.quality } : {})
+    };
+
+    if (options.loop === false) {
+      baseEncodeOptions.repeat = 1;
+    }
+
+    // Encode using gifski-wasm with error handling
+    let gifData: Uint8Array;
+    try {
+      console.log('[gifski] Starting encode with', {
+        frameCount: imageDataFrames.length,
+        width: options.width,
+        height: options.height,
+        useFrameDurations: hasCustomDurations,
+        frameDurations: hasCustomDurations ? normalizedDurations.slice(0, 3) : undefined,
+        fps: hasCustomDurations ? undefined : fallbackFrameRate,
+        quality: qualitySettings.quality
+      });
+
+      gifData = await encode(
+        hasCustomDurations
+          ? {
+              ...baseEncodeOptions,
+              frameDurations: normalizedDurations
+            }
+          : {
+              ...baseEncodeOptions,
+              fps: fallbackFrameRate
+            }
+      );
+
+      console.log('[gifski] Encode complete, buffer size:', gifData.byteLength);
+    } catch (error) {
+      console.error('[gifski] Encode failed:', error);
+      throw new Error(`gifski encoding failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
 
     if (abortSignal?.aborted) {
       throw new Error('Encoding cancelled');
