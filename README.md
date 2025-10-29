@@ -113,6 +113,7 @@ This will:
 
 ### Packaging
 - `npm run package` - Create .xpi file for distribution
+- `npm run build:production` - Build and package for Firefox Add-ons submission (removes localhost permissions)
 - `npm run sign` - Sign extension for Firefox Add-ons (requires API credentials)
 
 ## Firefox-Specific Features
@@ -140,6 +141,22 @@ This will:
 - **Firefox WebExtensions Manifest V3** - Extension platform
 - **Selenium WebDriver** - E2E testing (Firefox-compatible)
 
+## Third-Party Dependencies
+
+### Core Libraries
+
+- **React 18.2.0** (MIT) - UI framework for extension interface
+- **gif.js 0.2.0** (MIT) - GIF encoding fallback library
+- **gifenc 1.0.3** (MIT) - Primary GIF encoder
+- **gifski-wasm 2.2.0** (AGPL-3.0) - High-quality GIF encoder using WebAssembly
+- **Tailwind CSS 3.4.0** (MIT) - Utility-first CSS framework
+
+### WebAssembly Usage
+
+This extension uses WebAssembly (gifski-wasm) for high-performance GIF encoding. The WASM module is loaded only during GIF creation and provides superior quality and compression compared to JavaScript-only encoders.
+
+**Security Note:** All processing happens client-side in the browser. No data is transmitted to external servers.
+
 ## Troubleshooting
 
 ### Extension Not Loading
@@ -158,12 +175,97 @@ This will:
 - Use `web-ext run --verbose` for detailed logs
 - Check for TypeScript errors with `npm run typecheck`
 
-## Publishing to Firefox Add-ons
+## Building for Firefox Add-ons Submission
 
-1. Create Mozilla developer account
-2. Package the extension: `npm run package`
-3. Sign the extension: `npm run sign` (requires API credentials)
-4. Submit to Firefox Add-ons store
+### Prerequisites
+
+- Node.js 18+ (specified in `package.json` engines field)
+- npm (version from `package-lock.json`)
+- Approximately 800MB disk space (including node_modules)
+- 8GB+ RAM recommended for running tests
+
+### Production Build Instructions
+
+The extension uses TypeScript transpilation, webpack bundling, and minification. Mozilla reviewers will rebuild from source to verify the package.
+
+**Step-by-step build process:**
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Run validation suite:**
+   ```bash
+   npm run validate
+   ```
+   This runs typecheck, linting, and unit tests.
+
+3. **Run E2E tests locally:**
+   ```bash
+   npm run test:selenium:real
+   ```
+   **Note:** Real E2E tests require actual YouTube videos and cannot run in CI (YouTube blocks CI IPs). These tests must be run locally before submission.
+
+4. **Build production package:**
+   ```bash
+   npm run build:production
+   ```
+
+   This script:
+   - Runs webpack in production mode (transpiles TypeScript, bundles, minifies)
+   - Removes localhost permissions from manifest.json (used only for mock E2E tests)
+   - Packages extension into `web-ext-artifacts/ytgify_for_firefox-{version}.zip`
+   - Restores original manifest.json in `dist/` for local development
+
+5. **Verify output:**
+   - Package file: `web-ext-artifacts/ytgify_for_firefox-1.0.8.zip`
+   - Run `npm run lint` to ensure no validation errors
+
+### Localhost Permissions Note
+
+The source `manifest.json` includes localhost permissions (`*://localhost/*`, `*://127.0.0.1/*`) exclusively for mock E2E tests with local test videos. These permissions are automatically removed during `npm run build:production` and do not appear in the production package.
+
+### Pre-Submission Checklist
+
+Before submitting to Firefox Add-ons:
+
+- ✅ `npm run validate` passes (typecheck + lint:code + unit tests)
+- ✅ `npm run test:selenium:real` passes locally (real E2E tests with YouTube)
+- ✅ `npm run build:production` completes successfully
+- ✅ `npm run lint` shows no validation errors
+- ✅ Review `web-ext-artifacts/*.zip` package contents
+- ✅ Privacy policy reviewed (see `PRIVACY.md`)
+- ✅ Third-party dependencies documented (see above)
+
+### Submission to Firefox Add-ons
+
+1. **Create Mozilla developer account** at https://addons.mozilla.org
+2. **Prepare materials:**
+   - Built package from `web-ext-artifacts/`
+   - Source code (entire repository or archive)
+   - Screenshots and promotional images
+   - Privacy policy (see `PRIVACY.md`)
+3. **Submit for review:**
+   - Navigate to Developer Hub → Submit New Add-on
+   - Upload package file
+   - Provide source code and build instructions
+   - Include reviewer notes explaining:
+     - Build process (`npm install && npm run build:production`)
+     - Localhost permissions (mock tests only, stripped in production)
+     - WASM usage (gifski-wasm for GIF encoding)
+     - Storage usage (browser.storage.local for preferences)
+4. **Review timeline:** Initial review typically 1-14 days, updates 1-3 days
+
+### Signing (Optional)
+
+To sign the extension locally (requires Mozilla API credentials):
+
+```bash
+npm run sign
+```
+
+**Note:** Signing is optional. Firefox Add-ons will sign automatically upon approval.
 
 ## License
 
