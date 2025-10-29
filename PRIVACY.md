@@ -1,6 +1,6 @@
 # Privacy Policy for YTgify (Firefox Extension)
 
-**Last Updated: January 9, 2025**
+**Last Updated: October 31, 2025**
 
 ## Introduction
 
