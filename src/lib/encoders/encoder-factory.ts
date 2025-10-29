@@ -143,9 +143,9 @@ export class EncoderFactory {
    * Automatically select the best GIF encoder based on environment and performance
    */
   private async selectBestGifEncoder(): Promise<AbstractEncoder | null> {
-    // Priority order for Firefox: gif.js (reliable) -> gifenc (fast fallback) -> gifski (WASM issues in Firefox)
-    // gifski-wasm has CSP and dynamic import issues in Firefox extensions
-    const encoderPriority: EncoderType[] = ['gif.js', 'gifenc', 'gifski'];
+    // Priority order for Firefox: gifski (highest quality with temporal dithering) -> gif.js (good quality with Stucki-serpentine) -> gifenc (fast fallback)
+    // WASM support enabled via 'wasm-unsafe-eval' CSP directive in manifest.json
+    const encoderPriority: EncoderType[] = ['gifski', 'gif.js', 'gifenc'];
 
     for (const encoderType of encoderPriority) {
       const encoder = await this.getSpecificEncoder(encoderType);
@@ -163,7 +163,7 @@ export class EncoderFactory {
    */
   private async getAnyAvailableGifEncoder(): Promise<AbstractEncoder | null> {
     // Same priority as selectBestGifEncoder for consistency
-    const allEncoders: EncoderType[] = ['gif.js', 'gifenc', 'gifski'];
+    const allEncoders: EncoderType[] = ['gifski', 'gif.js', 'gifenc'];
 
     for (const encoderType of allEncoders) {
       try {
@@ -211,7 +211,7 @@ export class EncoderFactory {
     characteristics: AbstractEncoder['characteristics'];
     supportedFormats: string[];
   }>> {
-    const encoderTypes: EncoderType[] = ['gifski', 'gifenc', 'gif.js'];
+    const encoderTypes: EncoderType[] = ['gifski', 'gif.js', 'gifenc'];
     const results = [];
 
     for (const type of encoderTypes) {
@@ -390,7 +390,7 @@ export async function selectEncoder(
 ): Promise<EncoderSelection> {
   return encoderFactory.getEncoder({
     primary: preferredEncoder,
-    fallback: preferredEncoder === 'gifski' ? 'gif.js' : preferredEncoder === 'gifenc' ? 'gif.js' : undefined,
+    fallback: preferredEncoder === 'gifski' ? 'gif.js' : preferredEncoder === 'gif.js' ? 'gifenc' : 'gif.js',
     format
   });
 }

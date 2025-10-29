@@ -7,6 +7,7 @@ interface ProcessingScreenProps {
     totalStages: number;
     progress: number;
     message: string;
+    encoder?: string;
   };
   onComplete?: () => void;
   onError?: (error: string) => void;
@@ -40,6 +41,7 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
   const stageNumber = processingStatus?.stageNumber || 1;
   const totalStages = processingStatus?.totalStages || 4;
   const message = processingStatus?.message || 'Initializing...';
+  const encoder = processingStatus?.encoder;
 
   // Check for special states
   const isError = currentStage === 'ERROR';
@@ -135,6 +137,11 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
           {/* Current Message */}
           <div className="ytgif-current-message">
             <div className="ytgif-message-text">{message}</div>
+            {encoder && (
+              <div className="ytgif-message-text" data-encoder>
+                Encoder: {encoder}
+              </div>
+            )}
             {!isError && !isCompleted && (
               <div className="ytgif-loading-dots">
                 <span className="ytgif-dot">⚬</span>

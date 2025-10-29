@@ -23,6 +23,7 @@ interface TimelineOverlayWizardProps {
     totalStages: number;
     progress: number;
     message: string;
+    encoder?: string;
   };
   gifData?: {
     dataUrl: string;
@@ -75,4 +76,3 @@ export const TimelineOverlayWizard: React.FC<TimelineOverlayWizardProps> = ({
     />
   );
 };
-

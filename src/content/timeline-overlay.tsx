@@ -19,6 +19,7 @@ export interface TimelineOverlayProps {
     stage: string;
     progress: number;
     message: string;
+    encoder?: string;
   };
 }
 
@@ -257,6 +258,11 @@ export const TimelineOverlay: React.FC<TimelineOverlayProps> = ({
               />
             </div>
             <div className="ytgif-progress-message">{processingStatus.message}</div>
+            {processingStatus.encoder && (
+              <div className="ytgif-progress-message" data-encoder>
+                Encoder: {processingStatus.encoder}
+              </div>
+            )}
           </div>
         )}
 

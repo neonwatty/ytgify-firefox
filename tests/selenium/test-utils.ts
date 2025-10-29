@@ -48,11 +48,31 @@ export async function findElements(driver: WebDriver, selector: string): Promise
 }
 
 /**
- * Click element with wait
+ * Click element with wait and retry on stale element
  */
 export async function clickElement(driver: WebDriver, selector: string, timeout = 10000): Promise<void> {
-  const element = await waitForElementVisible(driver, selector, timeout);
-  await element.click();
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const element = await waitForElementVisible(driver, selector, timeout);
+      await element.click();
+      return; // Success
+    } catch (error) {
+      lastError = error as Error;
+
+      // Retry only on StaleElementReferenceError
+      if (error instanceof Error && error.name === 'StaleElementReferenceError' && i < maxRetries - 1) {
+        await sleep(driver, 200); // Short delay before retry
+        continue;
+      }
+
+      throw error; // Throw immediately for other errors or final retry
+    }
+  }
+
+  throw lastError || new Error('Click failed after retries');
 }
 
 /**
