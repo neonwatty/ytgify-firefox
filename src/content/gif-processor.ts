@@ -1,7 +1,12 @@
 // Content Script GIF Processor - Handles complete GIF creation in content script
 import { logger } from '@/lib/logger';
 import { createError } from '@/lib/errors';
-import { encodeFrames, FrameData as EncoderFrameData, EncodingOptions } from '@/lib/encoders';
+import {
+  encodeFrames,
+  FrameData as EncoderFrameData,
+  EncodingOptions,
+  EncodingResult
+} from '@/lib/encoders';
 import { TextOverlay } from '@/types';
 
 /**
@@ -74,6 +79,9 @@ interface GifProcessingResult {
     width: number;
     height: number;
     id: string;
+    encoder: string;
+    encodingTime?: number;
+    averageFrameTime?: number;
   };
 }
 
@@ -84,6 +92,7 @@ export interface StageProgressInfo {
   stageName: string;
   message: string;
   progress: number;
+  encoder?: string;
 }
 
 export class ContentScriptGifProcessor {
@@ -150,6 +159,11 @@ export class ContentScriptGifProcessor {
 
   private constructor() {}
 
+  private configureSmoothing(ctx: CanvasRenderingContext2D): void {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+  }
+
   /**
    * Initialize or resize reusable canvases to match the required dimensions
    */
@@ -161,6 +175,7 @@ export class ContentScriptGifProcessor {
       if (!this.mainCtx) {
         throw createError('gif', 'Failed to create main canvas context');
       }
+      this.configureSmoothing(this.mainCtx);
     }
 
     // Initialize recovery canvas
@@ -170,17 +185,24 @@ export class ContentScriptGifProcessor {
       if (!this.recoveryCtx) {
         throw createError('gif', 'Failed to create recovery canvas context');
       }
+      this.configureSmoothing(this.recoveryCtx);
     }
 
     // Resize canvases if dimensions changed
     if (this.mainCanvas.width !== width || this.mainCanvas.height !== height) {
       this.mainCanvas.width = width;
       this.mainCanvas.height = height;
+      if (this.mainCtx) {
+        this.configureSmoothing(this.mainCtx);
+      }
     }
 
     if (this.recoveryCanvas.width !== width || this.recoveryCanvas.height !== height) {
       this.recoveryCanvas.width = width;
       this.recoveryCanvas.height = height;
+      if (this.recoveryCtx) {
+        this.configureSmoothing(this.recoveryCtx);
+      }
     }
   }
 
@@ -282,8 +304,12 @@ export class ContentScriptGifProcessor {
 
       // Stage 3: Encoding GIF
       this.updateStage('ENCODING');
-      const gifBlob = await this.encodeGif(frames, options);
-      logger.info('[ContentScriptGifProcessor] GIF encoded', { size: gifBlob.size });
+      const encodingResult = await this.encodeGif(frames, options);
+      const gifBlob = encodingResult.blob;
+      logger.info('[ContentScriptGifProcessor] GIF encoded', {
+        size: gifBlob.size,
+        encoder: encodingResult.metadata.encoder,
+      });
 
       // Stage 4: Finalizing
       this.updateStage('FINALIZING');
@@ -297,6 +323,9 @@ export class ContentScriptGifProcessor {
         width: frames[0]?.width || 320,
         height: frames[0]?.height || 240,
         id: `gif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        encoder: encodingResult.metadata.encoder,
+        encodingTime: encodingResult.metadata.encodingTime,
+        averageFrameTime: encodingResult.metadata.averageFrameTime,
       };
 
       // Complete
@@ -308,6 +337,7 @@ export class ContentScriptGifProcessor {
         stageName: 'Complete',
         message: '✅ GIF created successfully!',
         progress: 100,
+        encoder: encodingResult.metadata.encoder,
       };
       onProgress?.(finalStageInfo);
 
@@ -588,7 +618,7 @@ export class ContentScriptGifProcessor {
   private async encodeGif(
     frames: HTMLCanvasElement[],
     options: GifProcessingOptions
-  ): Promise<Blob> {
+  ): Promise<EncodingResult> {
     const { frameRate = 10, quality = 'medium' } = options;
     console.log(
       '[gif-processor] encodeGif - frameRate from options:',
@@ -672,7 +702,7 @@ export class ContentScriptGifProcessor {
         metadata: result.metadata,
       });
 
-      return result.blob;
+      return result;
     } catch (error) {
       console.error('[ContentScriptGifProcessor] Failed to encode GIF:', error);
       logger.error('[ContentScriptGifProcessor] Failed to encode GIF', { error });

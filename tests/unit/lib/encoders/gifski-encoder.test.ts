@@ -17,6 +17,7 @@ jest.mock('gifski-wasm', () => ({
       0xF0, 0x00, 0x00, // Global color table flag
     ])
   ),
+  init: jest.fn().mockResolvedValue(undefined),
 }));
 
 describe('GifskiEncoder', () => {
@@ -26,6 +27,19 @@ describe('GifskiEncoder', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    (global as unknown as { browser?: any }).browser = {
+      runtime: {
+        getURL: jest.fn(() => 'moz-extension://mock-extension/pkg/gifski_wasm_bg.wasm'),
+      },
+    };
+
+    (global as unknown as { fetch?: jest.Mock }).fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () =>
+        new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]).buffer,
+    });
+
     encoder = new GifskiEncoder();
 
     // Create mock frame data
@@ -54,6 +68,11 @@ describe('GifskiEncoder', () => {
       quality: 'medium',
       loop: true,
     };
+  });
+
+  afterEach(() => {
+    delete (global as unknown as { browser?: unknown }).browser;
+    delete (global as unknown as { fetch?: unknown }).fetch;
   });
 
   describe('Basic Properties', () => {
@@ -103,6 +122,9 @@ describe('GifskiEncoder', () => {
   describe('Initialization', () => {
     it('should initialize successfully when available', async () => {
       await expect(encoder.initialize()).resolves.toBeUndefined();
+      expect((global.fetch as jest.Mock)).toHaveBeenCalledWith(
+        'moz-extension://mock-extension/pkg/gifski_wasm_bg.wasm'
+      );
     });
 
     it('should throw error when not available', async () => {
@@ -364,6 +386,8 @@ describe('GifskiEncoder', () => {
           fps: 30,
         })
       );
+      const lastCall = (encode as jest.Mock).mock.calls.at(-1)?.[0];
+      expect(lastCall?.repeat).toBeUndefined();
     });
 
     it('should pass width and height parameters correctly', async () => {
@@ -374,6 +398,17 @@ describe('GifskiEncoder', () => {
         expect.objectContaining({
           width: 640,
           height: 480,
+        })
+      );
+    });
+
+    it('should set repeat when looping is disabled', async () => {
+      const options = { ...mockOptions, loop: false };
+      await encoder.encode(mockFrames, options);
+
+      expect(encode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          repeat: 1,
         })
       );
     });

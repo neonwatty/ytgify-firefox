@@ -83,6 +83,10 @@ module.exports = (env, argv) => {
             from: 'node_modules/gif.js/dist/gif.worker.js',
             to: 'gif.worker.js',
           },
+          {
+            from: path.resolve(__dirname, 'node_modules/gifski-wasm/pkg/gifski_wasm_bg.wasm'),
+            to: 'pkg/gifski_wasm_bg.wasm'
+          },
         ],
       }),
     ],

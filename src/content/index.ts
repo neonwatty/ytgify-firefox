@@ -53,7 +53,14 @@ class YouTubeGifMaker {
   private videoElement: HTMLVideoElement | null = null;
   private navigationUnsubscribe: (() => void) | null = null;
   private processingStatus:
-    | { stage: string; stageNumber: number; totalStages: number; progress: number; message: string }
+    | {
+        stage: string;
+        stageNumber: number;
+        totalStages: number;
+        progress: number;
+        message: string;
+        encoder?: string;
+      }
     | undefined = undefined;
   private isWizardMode = false;
   private wizardUpdateInterval: NodeJS.Timeout | null = null;
@@ -1395,6 +1402,7 @@ class YouTubeGifMaker {
             totalStages: stageInfo.totalStages,
             progress: stageInfo.progress,
             message: stageInfo.message,
+            encoder: stageInfo.encoder,
           };
           this.updateTimelineOverlay();
           this.log(
@@ -1412,6 +1420,7 @@ class YouTubeGifMaker {
               totalStages: stageInfo.totalStages,
               progress: stageInfo.progress,
               message: stageInfo.message,
+              encoder: stageInfo.encoder,
             },
             '*'
           );
@@ -1422,6 +1431,7 @@ class YouTubeGifMaker {
         size: result.blob.size,
         metadata: result.metadata,
       });
+      console.info('[YTgify] Active GIF encoder:', result.metadata.encoder);
 
       // Save to IndexedDB
 
@@ -1448,6 +1458,7 @@ class YouTubeGifMaker {
         fileSize: result.blob.size,
         createdAt: new Date(),
         tags: [],
+        encoder: result.metadata.encoder,
       };
 
       // Store GIF data for preview
@@ -1464,6 +1475,7 @@ class YouTubeGifMaker {
         totalStages: 4,
         progress: 100,
         message: '✅ GIF created successfully!',
+        encoder: result.metadata.encoder,
       };
 
       // Force immediate update to pass GIF data to wizard
@@ -1487,6 +1499,15 @@ class YouTubeGifMaker {
       } else {
         // Preview modal removed - wizard handles everything
       }
+
+      window.postMessage(
+        {
+          type: 'GIF_ENCODER_SELECTED',
+          encoder: result.metadata.encoder,
+          metadata: result.metadata,
+        },
+        '*'
+      );
 
       // Reset creating state
       this.isCreatingGif = false;

@@ -28,6 +28,7 @@ interface OverlayWizardProps {
     totalStages: number;
     progress: number;
     message: string;
+    encoder?: string;
   };
   gifData?: {
     dataUrl: string;
