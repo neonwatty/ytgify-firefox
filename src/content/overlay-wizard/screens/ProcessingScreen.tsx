@@ -49,13 +49,6 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
   const isError = currentStage === 'ERROR';
   const isCompleted = currentStage === 'COMPLETED';
 
-  // Frame counting visibility logic
-  const isCaptureStage = currentStage === 'CAPTURING';
-  const isStageCurrent = stageNumber === 1;
-  const shouldShowProgress = isCaptureStage && isStageCurrent && !isError && !isCompleted;
-  const bs = lastBufferingStatus;
-  const hasData = bs && bs.currentFrame !== undefined;
-
   // Define all stages
   const stages = [
     { key: 'CAPTURING', name: 'Capturing Frames', icon: '📹' },
@@ -131,8 +124,19 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
                 }
               }
 
+              // Frame counter logic: only show for CAPTURING stage when it's current and we have data
               const isCapturingStage = stage.key === 'CAPTURING';
-              const showFrameCounter = isCapturingStage && isStageCurrent && hasData && !isError && !isCompleted;
+              const isThisStageCurrent = index + 1 === stageNumber;
+              const hasBufferingData =
+                lastBufferingStatus &&
+                lastBufferingStatus.currentFrame !== undefined &&
+                lastBufferingStatus.totalFrames !== undefined;
+              const showFrameCounter =
+                isCapturingStage &&
+                isThisStageCurrent &&
+                hasBufferingData &&
+                !isError &&
+                !isCompleted;
 
               return (
                 <div key={stage.key} className={`ytgif-stage-item ${stageItemClass}`}>
@@ -140,9 +144,10 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
                   <div className="ytgif-stage-content">
                     <span className="ytgif-stage-icon">{stage.icon}</span>
                     <span className="ytgif-stage-name">{stage.name}</span>
-                    {showFrameCounter && (
+                    {showFrameCounter && lastBufferingStatus && (
                       <span className="ytgif-stage-frame-counter">
-                        Frame {bs.currentFrame}/{bs.totalFrames} ~{bs.estimatedTimeRemaining}s
+                        Frame {lastBufferingStatus.currentFrame}/{lastBufferingStatus.totalFrames} ~
+                        {lastBufferingStatus.estimatedTimeRemaining}s
                       </span>
                     )}
                   </div>
