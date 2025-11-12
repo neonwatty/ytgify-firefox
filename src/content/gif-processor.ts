@@ -7,7 +7,7 @@ import {
   EncodingOptions,
   EncodingResult
 } from '@/lib/encoders';
-import { TextOverlay } from '@/types';
+import { TextOverlay, StageProgressInfo, BufferingStatus } from '@/types';
 
 /**
  * Compare two canvas frames to detect if they are similar/duplicate
@@ -83,16 +83,6 @@ interface GifProcessingResult {
     encodingTime?: number;
     averageFrameTime?: number;
   };
-}
-
-export interface StageProgressInfo {
-  stage: string;
-  stageNumber: number;
-  totalStages: number;
-  stageName: string;
-  message: string;
-  progress: number;
-  encoder?: string;
 }
 
 export class ContentScriptGifProcessor {
@@ -439,6 +429,12 @@ export class ContentScriptGifProcessor {
     let consecutiveDuplicates = 0;
     const MAX_CONSECUTIVE_DUPLICATES = Math.max(5, Math.min(30, Math.ceil(frameRate)));
 
+    // Frame progress tracking
+    const captureStartTime = performance.now();
+    let lastProgressEmit = 0;
+    const frameTimes: number[] = [];
+    const PROGRESS_THROTTLE_MS = 500; // Emit progress max every 500ms
+
     // Store original state
     const originalTime = videoElement.currentTime;
     const wasPlaying = !videoElement.paused;
@@ -601,6 +597,53 @@ export class ContentScriptGifProcessor {
       frameCtx.drawImage(this.mainCanvas!, 0, 0);
 
       frames.push(frameCanvas);
+
+      // Track frame capture time for ETA calculation
+      const frameTime = performance.now() - captureStartTime;
+      frameTimes.push(frameTime);
+
+      // Emit progress update (throttled to every 500ms)
+      const now = performance.now();
+      const shouldEmit = now - lastProgressEmit >= PROGRESS_THROTTLE_MS;
+
+      if (shouldEmit || i === frameCount - 1) {
+        // Calculate buffered percentage
+        let bufferedPercentage = 0;
+        const buffered = videoElement.buffered;
+        if (buffered.length > 0) {
+          const bufferedEnd = buffered.end(buffered.length - 1);
+          const videoDuration = videoElement.duration;
+          bufferedPercentage = (bufferedEnd / videoDuration) * 100;
+        }
+
+        // Calculate ETA from moving average of last 5 frame times
+        const recentFrameTimes = frameTimes.slice(-5);
+        const avgFrameTime =
+          recentFrameTimes.reduce((sum, time) => sum + time, 0) / recentFrameTimes.length;
+        const remainingFrames = frameCount - frames.length;
+        const estimatedTimeRemaining = Math.ceil((remainingFrames * avgFrameTime) / 1000);
+
+        // Emit progress with buffering status
+        const bufferingStatus: BufferingStatus = {
+          isBuffering: false,
+          currentFrame: frames.length,
+          totalFrames: frameCount,
+          bufferedPercentage,
+          estimatedTimeRemaining: Math.max(0, estimatedTimeRemaining),
+        };
+
+        this.progressCallback?.({
+          stage: 'CAPTURING',
+          stageNumber: 1,
+          totalStages: 4,
+          stageName: 'Capturing Frames',
+          message: `Captured frame ${frames.length}/${frameCount}`,
+          progress: this.getStageProgress('CAPTURING'),
+          bufferingStatus,
+        });
+
+        lastProgressEmit = now;
+      }
 
       // Export frame data for verification (in dev mode)
       if (typeof window !== 'undefined') {

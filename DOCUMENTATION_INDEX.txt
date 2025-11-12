@@ -1,0 +1,352 @@
+FRAME COUNTING UI IMPLEMENTATION - COMPLETE DOCUMENTATION
+
+================================================================================
+DOCUMENT LOCATION & PURPOSE
+================================================================================
+
+ROOT DIRECTORY (/Users/jeremywatt/Desktop/ytgify-firefox/):
+──────────────────────────────────────────────────────────
+
+1. PLAN_INDEX.txt
+   Purpose: Master navigation guide
+   Content: Document index, workflow phases, troubleshooting
+   Length: ~2,800 lines
+   Read First: YES - provides guidance on what to read next
+   
+2. FRAME_COUNTING_PLAN_SUMMARY.txt
+   Purpose: Comprehensive reference document
+   Content: Executive summary, architecture, checklist, testing strategy
+   Length: ~600 lines
+   Read When: After PLAN_INDEX.txt, before implementation
+
+3. DOCUMENTATION_INDEX.txt (This File)
+   Purpose: Quick reference for all documentation
+   Content: File locations, purposes, reading order
+   Length: ~400 lines
+   Read When: Anytime for quick lookup
+
+
+PLANS DIRECTORY (/Users/jeremywatt/Desktop/ytgify-firefox/plans/):
+──────────────────────────────────────────────────────────────────
+
+1. README.md
+   Purpose: Plans directory overview
+   Content: File organization, quick start, testing checklist
+   Length: ~100 lines
+   Primary Use: First entry point for plans directory
+
+2. FRAME_COUNTING_QUICK_REFERENCE.md ⭐ PRIMARY REFERENCE
+   Purpose: Main implementation guide
+   Content: Code snippets, key values, checklists, CSS
+   Length: ~400 lines
+   Primary Use: Reference during coding
+
+3. frame_counting_implementation_summary.md
+   Purpose: High-level overview
+   Content: Component structure, data flow, key numbers
+   Length: ~200 lines
+   Primary Use: Understanding scope before implementation
+
+4. frame_counting_ui_plan.md
+   Purpose: Detailed 12-section plan
+   Content: Architecture, logic, edge cases, rollback
+   Length: ~400 lines
+   Primary Use: Deep understanding of design decisions
+
+5. frame_counting_code_annotations.md
+   Purpose: Line-by-line code breakdown
+   Content: Before/after code, pseudo-code, state mutations
+   Length: ~800 lines
+   Primary Use: Technical reference while coding
+
+================================================================================
+RECOMMENDED READING SEQUENCE
+================================================================================
+
+QUICK PATH (< 1 hour - for experienced developers):
+────────────────────────────────────────────────────
+
+1. PLAN_INDEX.txt (2 min)
+   - Get oriented on documentation structure
+   - See "QUICK PATH" section
+
+2. FRAME_COUNTING_QUICK_REFERENCE.md (10 min)
+   - Understand changes at a glance
+   - Review code snippets
+
+3. Start Implementation (30-45 min)
+   - Follow checklist
+   - Copy-paste code snippets
+   - Reference pseudo-code as needed
+
+4. Test (15 min)
+   - Run manual tests
+   - Verify all conditions
+
+
+NORMAL PATH (< 2 hours - for most developers):
+───────────────────────────────────────────────
+
+1. PLAN_INDEX.txt (2 min)
+2. FRAME_COUNTING_PLAN_SUMMARY.txt (10 min)
+3. plans/README.md (2 min)
+4. plans/frame_counting_implementation_summary.md (5 min)
+5. plans/FRAME_COUNTING_QUICK_REFERENCE.md (10 min)
+6. Implementation (30-40 min)
+7. Testing (15 min)
+
+
+DEEP PATH (< 3 hours - for complex requirements):
+─────────────────────────────────────────────────
+
+1. All documents from NORMAL PATH
+2. plans/frame_counting_ui_plan.md (full read, 20 min)
+3. plans/frame_counting_code_annotations.md (full read, 30 min)
+4. Implementation (30-40 min)
+5. Testing (15 min)
+6. Optional: Write unit tests (20-30 min)
+
+
+================================================================================
+QUICK LOOKUP BY TOPIC
+================================================================================
+
+State Management:
+  └─ plans/frame_counting_code_annotations.md (Section D)
+  └─ plans/frame_counting_ui_plan.md (Section 1-2)
+
+Props Interface:
+  └─ plans/frame_counting_code_annotations.md (Section B)
+  └─ plans/FRAME_COUNTING_QUICK_REFERENCE.md (Props table)
+
+useEffect Hook:
+  └─ plans/frame_counting_code_annotations.md (Section D)
+  └─ FRAME_COUNTING_PLAN_SUMMARY.txt (State Architecture section)
+
+Computed Variables:
+  └─ plans/frame_counting_code_annotations.md (Section F)
+  └─ plans/FRAME_COUNTING_QUICK_REFERENCE.md (Visibility Logic)
+
+JSX Structure:
+  └─ plans/frame_counting_code_annotations.md (Section J)
+  └─ plans/FRAME_COUNTING_QUICK_REFERENCE.md (JSX Frame Counter)
+
+CSS Styling:
+  └─ plans/frame_counting_code_annotations.md (CSS Section)
+  └─ plans/FRAME_COUNTING_QUICK_REFERENCE.md (CSS Classes)
+
+Data Flow:
+  └─ plans/frame_counting_code_annotations.md (Data Flow Pseudo-Code)
+  └─ FRAME_COUNTING_PLAN_SUMMARY.txt (Data Flow Integration)
+
+Edge Cases:
+  └─ plans/frame_counting_ui_plan.md (Section 9)
+  └─ plans/FRAME_COUNTING_QUICK_REFERENCE.md (Safe Fallbacks)
+
+Testing:
+  └─ FRAME_COUNTING_PLAN_SUMMARY.txt (Testing Strategy)
+  └─ plans/FRAME_COUNTING_QUICK_REFERENCE.md (Testing Commands)
+
+Troubleshooting:
+  └─ PLAN_INDEX.txt (Troubleshooting section)
+  └─ plans/frame_counting_ui_plan.md (Edge Cases section)
+
+Rollback:
+  └─ FRAME_COUNTING_PLAN_SUMMARY.txt (Rollback Plan)
+  └─ plans/FRAME_COUNTING_QUICK_REFERENCE.md (Rollback section)
+
+
+================================================================================
+FILE MODIFICATION GUIDE
+================================================================================
+
+ProcessingScreen.tsx Changes:
+
+Line 3-14:    UPDATE: Add details field to ProcessingScreenProps
+              See: plans/frame_counting_code_annotations.md (Section B)
+              
+Line 22:      ADD: lastBufferingStatus state hook
+              See: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Code Snippets)
+              
+Line 30:      ADD: useEffect for buffering status
+              See: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Code Snippets)
+              
+Line 49:      ADD: Computed variables
+              See: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Code Snippets)
+              
+Line 137-152: REPLACE: Message section with enhanced version
+              See: plans/frame_counting_code_annotations.md (Section J)
+
+wizard-styles.css Changes:
+
+Line 1753+:   ADD: 4 new CSS classes
+              See: plans/FRAME_COUNTING_QUICK_REFERENCE.md (CSS Classes)
+
+
+================================================================================
+IMPLEMENTATION STEPS CHECKLIST
+================================================================================
+
+PREP:
+  [ ] Read PLAN_INDEX.txt
+  [ ] Read FRAME_COUNTING_PLAN_SUMMARY.txt
+  [ ] Open ProcessingScreen.tsx in editor
+  [ ] Open wizard-styles.css in editor
+
+STEP 1 - Props Interface (5 min):
+  [ ] Add details field to ProcessingScreenProps
+  [ ] Reference: plans/frame_counting_code_annotations.md (Section B)
+
+STEP 2 - State Hook (5 min):
+  [ ] Add lastBufferingStatus useState
+  [ ] Reference: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Code Snippets)
+
+STEP 3 - useEffect Hook (8 min):
+  [ ] Add buffering status sync effect
+  [ ] Reference: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Code Snippets)
+
+STEP 4 - Computed Variables (3 min):
+  [ ] Add isCaptureStage
+  [ ] Add shouldShowProgress
+  [ ] Reference: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Code Snippets)
+
+STEP 5 - JSX Replacement (10 min):
+  [ ] Replace lines 137-152 message section
+  [ ] Reference: plans/frame_counting_code_annotations.md (Section J)
+  [ ] Verify: Loading dots still present
+
+STEP 6 - CSS Styling (5 min):
+  [ ] Add 4 CSS classes after line 1753
+  [ ] Reference: plans/FRAME_COUNTING_QUICK_REFERENCE.md (CSS Classes)
+
+TEST:
+  [ ] npm run build
+  [ ] npm run dev:firefox
+  [ ] Manual testing (15 min)
+  [ ] Verify checklist (plans/FRAME_COUNTING_QUICK_REFERENCE.md)
+
+
+================================================================================
+DOCUMENTATION CROSS-REFERENCES
+================================================================================
+
+All 4 key documents cross-reference each other:
+
+PLAN_INDEX.txt
+  └─ References: FRAME_COUNTING_PLAN_SUMMARY.txt, plans/* documents
+
+FRAME_COUNTING_PLAN_SUMMARY.txt
+  └─ References: PLAN_INDEX.txt, plans/FRAME_COUNTING_QUICK_REFERENCE.md
+
+plans/README.md
+  └─ References: All documentation files
+
+plans/FRAME_COUNTING_QUICK_REFERENCE.md
+  └─ References: All other documentation for detailed info
+
+plans/frame_counting_implementation_summary.md
+  └─ References: Other plans files for deeper dives
+
+plans/frame_counting_ui_plan.md
+  └─ References: code_annotations.md for code examples
+
+plans/frame_counting_code_annotations.md
+  └─ References: Other plans for architecture overview
+
+
+================================================================================
+QUICK REFERENCE TABLES
+================================================================================
+
+For specific values, see:
+  plans/FRAME_COUNTING_QUICK_REFERENCE.md → "Key Values" table
+
+For display examples, see:
+  FRAME_COUNTING_PLAN_SUMMARY.txt → "Display Format & Examples"
+
+For CSS properties, see:
+  plans/FRAME_COUNTING_QUICK_REFERENCE.md → "CSS Classes"
+
+For code patterns, see:
+  plans/frame_counting_code_annotations.md → "Data Flow Pseudo-Code"
+
+
+================================================================================
+ERROR RESOLUTION GUIDE
+================================================================================
+
+If stuck on:                          See:
+─────────────────────────────────────────────────────────────────
+  How to implement state hook        FRAME_COUNTING_QUICK_REFERENCE.md
+  useEffect logic                    frame_counting_code_annotations.md
+  JSX structure                      frame_counting_code_annotations.md (J)
+  CSS styling                        frame_counting_code_annotations.md
+  Frame counter not appearing        PLAN_INDEX.txt (TROUBLESHOOTING)
+  Progress bar calculation           plans/frame_counting_ui_plan.md (9)
+  Edge case handling                 plans/frame_counting_ui_plan.md (9)
+  Testing procedures                 FRAME_COUNTING_PLAN_SUMMARY.txt
+
+
+================================================================================
+DOCUMENT STATISTICS
+================================================================================
+
+Total Documentation Files: 7
+Total File Size: ~68 KB
+Total Lines: ~4,000
+Total Words: ~25,000
+
+Estimated Reading Time:
+  Quick path: 20 minutes
+  Normal path: 45 minutes
+  Deep path: 90 minutes
+
+Estimated Implementation Time:
+  Setup: 5 minutes
+  Coding: 35 minutes
+  Testing: 20 minutes
+  Total: 60 minutes (1 hour)
+
+Total Time (Reading + Implementation): 1.5 - 2.5 hours
+
+
+================================================================================
+FINAL NOTES
+================================================================================
+
+All documentation is self-contained and complete.
+No additional research needed beyond these documents.
+
+Cross-references allow jumping between documents for details.
+Code snippets are copy-paste ready (with adjustments for context).
+Edge cases are handled with safe fallbacks.
+Rollback procedure documented for risk mitigation.
+
+Implementation is straightforward and low-risk:
+  - No external dependencies
+  - No breaking changes
+  - Fully reversible
+  - Isolated to 2 files
+  - Follows project conventions
+
+Ready to proceed with implementation.
+
+Questions? See PLAN_INDEX.txt "TROUBLESHOOTING" section.
+
+================================================================================
+DOCUMENT VERSION
+================================================================================
+
+Generated: 2025-11-11
+Status: Complete and Ready
+Target: ProcessingScreen.tsx Frame Counting UI
+Branch: feature/popup-version-display
+
+Next Steps:
+  1. Read PLAN_INDEX.txt
+  2. Follow implementation workflow
+  3. Test thoroughly
+  4. Commit changes
+  5. Submit PR
+
+================================================================================

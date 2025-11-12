@@ -7,6 +7,12 @@ export {
   
 } from './storage';
 
+// Re-export progress tracking types
+export {
+  BufferingStatus,
+  StageProgressInfo,
+} from './progress';
+
 // Re-export all message types for Chrome extension communication
 export {
   
