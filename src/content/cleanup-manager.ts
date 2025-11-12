@@ -124,7 +124,7 @@ class CleanupManager {
         try {
           // Clear any temporary data from session storage
           if (typeof browser !== 'undefined' && browser.storage && browser.storage.session) {
-            // Only clear temporary/session data, preserve user preferences and GIF library
+            // Only clear temporary/session data, preserve user preferences
             const sessionData = await browser.storage.session.get(null);
             const keysToRemove = Object.keys(sessionData).filter(key => 
               key.includes('temp') || key.includes('session') || key.includes('cache')

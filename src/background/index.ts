@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { initializeMessageBus } from '@/shared/message-bus';
 import { sharedLogger, sharedErrorHandler, extensionStateManager } from '@/shared';
 import { engagementTracker } from '@/shared/engagement-tracker';
+import { MigrationManager } from './migrations';
 
 // Declare browser namespace for Firefox
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,6 +35,18 @@ browser.runtime.onInstalled.addListener(
         reason: details.reason,
         version: browser.runtime.getManifest().version,
       });
+
+      // Run migrations (for updates and new installs)
+      if (details.reason === 'update' || details.reason === 'install') {
+        try {
+          const migrationManager = new MigrationManager();
+          await migrationManager.runMigrations();
+          sharedLogger.info('[Background] Migrations completed', {}, 'background');
+        } catch (error) {
+          sharedLogger.error('[Background] Migration failed (non-fatal):', error, 'background');
+          // Continue with extension initialization even if migration fails
+        }
+      }
 
       // Initialize default storage
       await initializeStorage();

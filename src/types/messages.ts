@@ -250,6 +250,10 @@ export interface GifCreationComplete extends BaseMessage {
   error?: string;
 }
 
+/**
+ * @deprecated No longer saving GIFs to storage. GIFs now download directly to browser downloads folder.
+ * This interface is kept for backwards compatibility but should not be used.
+ */
 export interface SaveGifRequest extends BaseMessage {
   type: 'SAVE_GIF_REQUEST';
   data: {
@@ -278,6 +282,10 @@ export interface SaveGifRequest extends BaseMessage {
   };
 }
 
+/**
+ * @deprecated No longer saving GIFs to storage. GIFs now download directly to browser downloads folder.
+ * This interface is kept for backwards compatibility but should not be used.
+ */
 export interface SaveGifResponse extends BaseMessage {
   type: 'SAVE_GIF_RESPONSE';
   success: boolean;
@@ -329,8 +337,6 @@ export type ExtensionMessage =
   | RequestVideoDataForGif
   | VideoDataResponse
   | GifCreationComplete
-  | SaveGifRequest
-  | SaveGifResponse
   | ContentFrameExtractionRequest;
 
 // Type guards for message validation

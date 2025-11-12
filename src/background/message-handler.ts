@@ -120,18 +120,9 @@ export class BackgroundMessageHandler {
           data: { message: 'GIF creation started' }
         } as SuccessResponse);
         
-        // Handle the timeline selection asynchronously  
+        // Handle the timeline selection asynchronously
         this.handleTimelineSelectionUpdate(message, sender);
         return false; // Response already sent
-      }
-
-      // Handle GIF storage request
-      if (message.type === 'SAVE_GIF_REQUEST') {
-        // Use Promise to ensure the port stays open
-        (async () => {
-          await this.handleSaveGifRequest(message, sender, sendResponse);
-        })();
-        return true; // Keep port open for async response
       }
 
       // Handle GIF download request
@@ -434,49 +425,6 @@ export class BackgroundMessageHandler {
     logger.log(level, logMessage, context, 'background');
   }
 
-  // Handle GIF storage request
-  private async handleSaveGifRequest(
-    message: ExtensionMessage,
-    sender: browser.runtime.MessageSender,
-    sendResponse: (response: ExtensionMessage) => void
-  ): Promise<void> {
-    try {
-      logger.info('[MessageHandler] Saving GIF to storage', { 
-        from: sender.tab?.url || 'popup'
-      });
-
-      // Extract GIF data from message
-      const saveRequest = message as SaveGifRequest;
-      const { gifData } = saveRequest.data;
-      
-      // Save directly to IndexedDB without using the storage manager
-      // to avoid document reference issues
-      const saved = await this.saveGifDirectly(gifData);
-      
-      if (saved) {
-        logger.info('[MessageHandler] GIF saved successfully', { id: gifData.id });
-        
-        const response: SaveGifResponse = {
-          type: 'SAVE_GIF_RESPONSE',
-          success: true,
-          data: { gifId: gifData.id }
-        };
-        sendResponse(response);
-      } else {
-        throw new Error('Failed to save GIF to IndexedDB');
-      }
-      
-    } catch (error) {
-      logger.error('[MessageHandler] Failed to save GIF', { error });
-      const response: SaveGifResponse = {
-        type: 'SAVE_GIF_RESPONSE',
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to save GIF'
-      };
-      sendResponse(response);
-    }
-  }
-
   // Helper to convert blob to data URL
   private async blobToDataUrl(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -484,94 +432,6 @@ export class BackgroundMessageHandler {
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
-    });
-  }
-
-  // Direct IndexedDB save without storage manager
-  private async saveGifDirectly(gifData: GifData): Promise<boolean> {
-    return new Promise((resolve) => {
-      try {
-        logger.info('[MessageHandler] Starting direct IndexedDB save', { id: gifData.id });
-        
-        if (typeof indexedDB === 'undefined') {
-          logger.error('[MessageHandler] IndexedDB is not available');
-          resolve(false);
-          return;
-        }
-        
-        const dbName = 'YouTubeGifStore';
-        const request = indexedDB.open(dbName, 3);
-        
-        request.onerror = () => {
-          logger.error('[MessageHandler] Failed to open IndexedDB', { error: request.error });
-          resolve(false);
-        };
-      
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        
-        // Create stores if they don't exist
-        if (!db.objectStoreNames.contains('gifs')) {
-          const gifsStore = db.createObjectStore('gifs', { keyPath: 'id' });
-          gifsStore.createIndex('createdAt', 'metadata.createdAt', { unique: false });
-        }
-        
-        if (!db.objectStoreNames.contains('thumbnails')) {
-          db.createObjectStore('thumbnails', { keyPath: 'gifId' });
-        }
-        
-        if (!db.objectStoreNames.contains('metadata')) {
-          const metaStore = db.createObjectStore('metadata', { keyPath: 'id' });
-          metaStore.createIndex('youtubeUrl', 'youtubeUrl', { unique: false });
-        }
-      };
-      
-      request.onsuccess = () => {
-        const db = request.result;
-        const transaction = db.transaction(['gifs', 'thumbnails', 'metadata'], 'readwrite');
-        const gifsStore = transaction.objectStore('gifs');
-        const thumbnailsStore = transaction.objectStore('thumbnails');
-        const metadataStore = transaction.objectStore('metadata');
-        
-        // Save main GIF data
-        const gifRequest = gifsStore.put(gifData);
-        
-        // Save thumbnail if present
-        if (gifData.thumbnailBlob) {
-          thumbnailsStore.put({
-            gifId: gifData.id,
-            blob: gifData.thumbnailBlob
-          });
-        }
-        
-        // Save metadata for quick queries
-        metadataStore.put({
-          id: gifData.id,
-          title: gifData.title,
-          youtubeUrl: gifData.metadata?.youtubeUrl,
-          createdAt: gifData.metadata?.createdAt || new Date(),
-          lastModified: new Date()
-        });
-        
-        transaction.oncomplete = () => {
-          logger.info('[MessageHandler] IndexedDB transaction completed');
-          resolve(true);
-        };
-        
-        transaction.onerror = () => {
-          logger.error('[MessageHandler] IndexedDB transaction failed');
-          resolve(false);
-        };
-        
-        gifRequest.onerror = () => {
-          logger.error('[MessageHandler] Failed to save GIF to IndexedDB');
-          resolve(false);
-        };
-      };
-      } catch (error) {
-        logger.error('[MessageHandler] Exception in saveGifDirectly', { error });
-        resolve(false);
-      }
     });
   }
 

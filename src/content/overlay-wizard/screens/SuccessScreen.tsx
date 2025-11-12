@@ -95,6 +95,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
         {/* Success Message */}
         <div className="ytgif-success-message">
           <h3>Your GIF is ready!</h3>
+          <p className="ytgif-success-subtext">Download your GIF to save it to your device</p>
           {!gifDataUrl && gifSize && <p className="ytgif-gif-size">Size: {formatSize(gifSize)}</p>}
         </div>
 
