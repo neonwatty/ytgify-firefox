@@ -802,4 +802,174 @@ describe('PopupApp Component', () => {
       consoleSpy.mockRestore();
     });
   });
+
+  describe('Version Display', () => {
+    beforeEach(() => {
+      // Ensure manifest mock is properly set up before each test
+      browserMock.runtime.getManifest = jest.fn(() => ({
+        name: 'YTgify for Firefox',
+        version: '1.0.0',
+        manifest_version: 3,
+        browser_specific_settings: {
+          gecko: {
+            id: 'ytgify@firefox.extension',
+            strict_min_version: '109.0'
+          }
+        }
+      }));
+    });
+
+    test('displays version number from manifest', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Test Video - YouTube');
+
+      // Mock manifest returns version 1.0.0 by default
+      render(<PopupApp />);
+
+      // Wait for version to be displayed
+      await waitFor(() => {
+        expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+      });
+    });
+
+    test('does not display version if manifest version is empty', () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Test Video - YouTube');
+
+      // Mock manifest with empty version
+      browserMock.runtime.getManifest.mockReturnValue({ version: '' });
+
+      render(<PopupApp />);
+
+      // Version should not be displayed
+      const versionElement = screen.queryByText(/^v/);
+      expect(versionElement).not.toBeInTheDocument();
+    });
+
+    test('formats version with "v" prefix', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Test Video - YouTube');
+
+      // Mock manifest with specific version
+      browserMock.runtime.getManifest.mockReturnValue({ version: '2.5.3' });
+
+      render(<PopupApp />);
+
+      await waitFor(() => {
+        expect(screen.getByText('v2.5.3')).toBeInTheDocument();
+      });
+    });
+
+    test('handles manifest retrieval errors gracefully', () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Test Video - YouTube');
+
+      // Mock manifest to throw error
+      browserMock.runtime.getManifest.mockImplementation(() => {
+        throw new Error('Manifest not available');
+      });
+
+      // Spy on console.error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Should not throw
+      expect(() => render(<PopupApp />)).not.toThrow();
+
+      // Version should not be displayed
+      const versionElement = screen.queryByText(/^v/);
+      expect(versionElement).not.toBeInTheDocument();
+
+      // Verify error was logged
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[Popup] Failed to get version:',
+        expect.any(Error)
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    test('applies correct CSS class to version element', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Test Video - YouTube');
+
+      // Mock manifest returns version 1.0.0 by default
+      render(<PopupApp />);
+
+      await waitFor(() => {
+        const versionElement = screen.getByText('v1.0.0');
+        expect(versionElement).toHaveClass('popup-version');
+      });
+    });
+
+    test('displays version regardless of review footer visibility', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Test Video - YouTube');
+
+      // Mock engagement data: does not qualify for review footer
+      const installDate = Date.now();
+      browserMock.storage.local.get.mockImplementation((keys: any) => {
+        const result = {
+          'engagement-data': {
+            installDate,
+            totalGifsCreated: 0, // Not enough
+            prompts: {
+              primary: { shown: false },
+              secondary: { shown: false }
+            },
+            milestones: {
+              milestone10: false,
+              milestone25: false,
+              milestone50: false
+            },
+            popupFooterDismissed: false
+          }
+        };
+        return Promise.resolve(result);
+      });
+
+      render(<PopupApp />);
+
+      await waitFor(() => {
+        // Version should still be visible
+        expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+        // Review footer should not be visible
+        expect(screen.queryByText(/Leave us a review/)).not.toBeInTheDocument();
+      });
+    });
+
+    test('displays version on different page types', async () => {
+      // Test on YouTube page
+      mockTabWithUrl('https://www.youtube.com/watch?v=test', 'Test - YouTube');
+      const { unmount: unmount1 } = render(<PopupApp />);
+      await waitFor(() => {
+        expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+      });
+      unmount1();
+
+      // Reset mocks and restore getManifest
+      jest.clearAllMocks();
+      browserMock.runtime.getManifest = jest.fn(() => ({
+        name: 'YTgify for Firefox',
+        version: '1.0.0',
+        manifest_version: 3
+      }));
+
+      // Test on non-YouTube page
+      mockTabWithUrl('https://www.example.com', 'Example');
+      const { unmount: unmount2 } = render(<PopupApp />);
+      await waitFor(() => {
+        expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+      });
+      unmount2();
+
+      // Reset mocks and restore getManifest again
+      jest.clearAllMocks();
+      browserMock.runtime.getManifest = jest.fn(() => ({
+        name: 'YTgify for Firefox',
+        version: '1.0.0',
+        manifest_version: 3
+      }));
+
+      // Test on Shorts page
+      mockTabWithUrl('https://www.youtube.com/shorts/ABC123', 'Short - YouTube');
+      render(<PopupApp />);
+      await waitFor(() => {
+        expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+      });
+    });
+  });
 });
