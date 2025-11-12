@@ -637,7 +637,7 @@ export class ContentScriptGifProcessor {
           stageNumber: 1,
           totalStages: 4,
           stageName: 'Capturing Frames',
-          message: `Captured frame ${frames.length}/${frameCount}`,
+          message: 'Capturing frames from video...',
           progress: this.getStageProgress('CAPTURING'),
           bufferingStatus,
         });
