@@ -274,8 +274,7 @@ describe('ProcessingScreen', () => {
 
       expect(screen.getByText('Creating Your GIF')).toBeInTheDocument();
       expect(screen.getByText('Stage 1 of 4')).toBeInTheDocument();
-      // Multiple "Initializing..." texts exist: message + frame progress placeholder
-      expect(screen.getAllByText('Initializing...')[0]).toBeInTheDocument();
+      expect(screen.getByText('Initializing...')).toBeInTheDocument();
     });
 
     it('should handle partial processingStatus', () => {
@@ -299,7 +298,7 @@ describe('ProcessingScreen', () => {
   });
 
   describe('Loading Animation', () => {
-    it('should show frame progress bar during CAPTURING stage', () => {
+    it('should show frame counter in CAPTURING stage when data available', () => {
       render(
         <ProcessingScreen
           processingStatus={{
@@ -308,18 +307,22 @@ describe('ProcessingScreen', () => {
             totalStages: 4,
             progress: 25,
             message: 'Reading video data...',
+            bufferingStatus: {
+              isBuffering: false,
+              currentFrame: 10,
+              totalFrames: 50,
+              bufferedPercentage: 80,
+              estimatedTimeRemaining: 15,
+            },
           }}
           onComplete={mockOnComplete}
           onError={mockOnError}
         />
       );
 
-      // During CAPTURING stage, frame progress bar is shown instead of loading dots
-      const progressBarContainer = screen.getByText('Reading video data...').nextElementSibling;
-      expect(progressBarContainer).toHaveClass('ytgif-inline-progress-bar');
-
-      // Should show "Initializing..." placeholder when no buffering data
-      expect(screen.getByText('Initializing...')).toBeInTheDocument();
+      // Frame counter should be visible in the stage item
+      expect(screen.getByText(/Frame 10\/50/)).toBeInTheDocument();
+      expect(screen.getByText(/~15s/)).toBeInTheDocument();
     });
 
     it('should show loading dots during non-CAPTURING stages', () => {
@@ -574,10 +577,7 @@ describe('ProcessingScreen', () => {
       );
 
       // Component uses || operator, so empty string defaults to 'Initializing...'
-      // Note: During CAPTURING stage, there are two "Initializing..." texts:
-      // 1. The message text
-      // 2. The frame progress placeholder
-      expect(screen.getAllByText('Initializing...')[0]).toBeInTheDocument();
+      expect(screen.getByText('Initializing...')).toBeInTheDocument();
 
       // Test with undefined message (should use default)
       rerender(
@@ -594,7 +594,7 @@ describe('ProcessingScreen', () => {
         />
       );
 
-      expect(screen.getAllByText('Initializing...')[0]).toBeInTheDocument();
+      expect(screen.getByText('Initializing...')).toBeInTheDocument();
     });
 
     it('should not call onComplete multiple times for same progress', async () => {

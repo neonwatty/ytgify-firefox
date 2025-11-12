@@ -131,12 +131,20 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
                 }
               }
 
+              const isCapturingStage = stage.key === 'CAPTURING';
+              const showFrameCounter = isCapturingStage && isStageCurrent && hasData && !isError && !isCompleted;
+
               return (
                 <div key={stage.key} className={`ytgif-stage-item ${stageItemClass}`}>
                   <div className="ytgif-stage-indicator">{indicator}</div>
                   <div className="ytgif-stage-content">
                     <span className="ytgif-stage-icon">{stage.icon}</span>
                     <span className="ytgif-stage-name">{stage.name}</span>
+                    {showFrameCounter && (
+                      <span className="ytgif-stage-frame-counter">
+                        Frame {bs.currentFrame}/{bs.totalFrames} ~{bs.estimatedTimeRemaining}s
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -146,36 +154,6 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
           {/* Current Message */}
           <div className="ytgif-current-message">
             <div className="ytgif-message-text">{message}</div>
-
-            {/* Frame Counting Progress */}
-            {shouldShowProgress && (
-              <div className="ytgif-inline-progress-bar">
-                {hasData ? (
-                  <>
-                    <div
-                      className="ytgif-inline-progress-fill"
-                      style={{ width: `${(bs.currentFrame / bs.totalFrames) * 100}%` }}
-                    />
-                    <div className="ytgif-inline-progress-info">
-                      <span className="ytgif-inline-frame-count">
-                        Frame {bs.currentFrame}/{bs.totalFrames}
-                      </span>
-                      {bs.estimatedTimeRemaining > 0 && (
-                        <>
-                          <span className="ytgif-inline-separator" />
-                          <span className="ytgif-inline-eta">
-                            ~{bs.estimatedTimeRemaining}s
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className="ytgif-inline-progress-placeholder">Initializing...</div>
-                )}
-              </div>
-            )}
-
             {encoder && (
               <div className="ytgif-message-text" data-encoder>
                 Encoder: {encoder}

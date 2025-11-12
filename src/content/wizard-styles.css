@@ -1709,6 +1709,18 @@
   font-weight: 500;
 }
 
+.ytgif-stage-frame-counter {
+  margin-left: auto;
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4ade80;
+  padding: 2px 8px;
+  background: rgba(74, 222, 128, 0.15);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 .ytgif-stage-item.pending .ytgif-stage-name {
   color: rgba(255, 255, 255, 0.5);
 }
