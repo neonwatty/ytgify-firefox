@@ -18,6 +18,7 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
   // Persist buffering status to prevent flickering
   useEffect(() => {
     if (processingStatus?.bufferingStatus) {
+      console.log('[ProcessingScreen] Setting bufferingStatus:', processingStatus.bufferingStatus);
       setLastBufferingStatus(processingStatus.bufferingStatus);
     }
   }, [processingStatus?.bufferingStatus]);
@@ -137,6 +138,21 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
                 hasBufferingData &&
                 !isError &&
                 !isCompleted;
+
+              // Debug logging for CAPTURING stage
+              if (isCapturingStage) {
+                console.log('[ProcessingScreen] Frame counter check:', {
+                  stageKey: stage.key,
+                  index,
+                  stageNumber,
+                  isThisStageCurrent,
+                  lastBufferingStatus,
+                  hasBufferingData,
+                  isError,
+                  isCompleted,
+                  showFrameCounter,
+                });
+              }
 
               return (
                 <div key={stage.key} className={`ytgif-stage-item ${stageItemClass}`}>
