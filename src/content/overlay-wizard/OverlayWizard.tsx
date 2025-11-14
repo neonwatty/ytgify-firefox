@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { TimelineSelection, TextOverlay } from '@/types';
+import { TimelineSelection, TextOverlay, StageProgressInfo } from '@/types';
 import { useOverlayNavigation } from './hooks/useOverlayNavigation';
 import FeedbackScreen from './screens/FeedbackScreen';
 import QuickCaptureScreen from './screens/QuickCaptureScreen';
@@ -22,14 +22,7 @@ interface OverlayWizardProps {
   ) => void;
   onSeekTo?: (time: number) => void;
   isCreating?: boolean;
-  processingStatus?: {
-    stage: string;
-    stageNumber: number;
-    totalStages: number;
-    progress: number;
-    message: string;
-    encoder?: string;
-  };
+  processingStatus?: StageProgressInfo;
   gifData?: {
     dataUrl: string;
     size: number;
