@@ -1388,14 +1388,7 @@ class YouTubeGifMaker {
           textOverlays,
         },
         (stageInfo) => {
-          this.processingStatus = {
-            stage: stageInfo.stage,
-            stageNumber: stageInfo.stageNumber,
-            totalStages: stageInfo.totalStages,
-            progress: stageInfo.progress,
-            message: stageInfo.message,
-            encoder: stageInfo.encoder,
-          };
+          this.processingStatus = stageInfo;
           this.updateTimelineOverlay();
           this.log(
             'debug',
