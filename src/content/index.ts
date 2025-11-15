@@ -20,6 +20,7 @@ import {
   JobProgressUpdate,
   SuccessResponse,
   ErrorResponse,
+  StageProgressInfo,
 } from '@/types';
 import { GifData, GifSettings } from '@/types/storage';
 import { youTubeDetector, YouTubeNavigationEvent } from './youtube-detector';
@@ -52,16 +53,7 @@ class YouTubeGifMaker {
   private currentSelection: TimelineSelection | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private navigationUnsubscribe: (() => void) | null = null;
-  private processingStatus:
-    | {
-        stage: string;
-        stageNumber: number;
-        totalStages: number;
-        progress: number;
-        message: string;
-        encoder?: string;
-      }
-    | undefined = undefined;
+  private processingStatus: StageProgressInfo | undefined = undefined;
   private isWizardMode = false;
   private wizardUpdateInterval: NodeJS.Timeout | null = null;
   private createdGifData:
@@ -1396,14 +1388,7 @@ class YouTubeGifMaker {
           textOverlays,
         },
         (stageInfo) => {
-          this.processingStatus = {
-            stage: stageInfo.stage,
-            stageNumber: stageInfo.stageNumber,
-            totalStages: stageInfo.totalStages,
-            progress: stageInfo.progress,
-            message: stageInfo.message,
-            encoder: stageInfo.encoder,
-          };
+          this.processingStatus = stageInfo;
           this.updateTimelineOverlay();
           this.log(
             'debug',

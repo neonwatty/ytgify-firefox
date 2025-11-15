@@ -1,14 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { StageProgressInfo, BufferingStatus } from '@/types';
 
 interface ProcessingScreenProps {
-  processingStatus?: {
-    stage: string;
-    stageNumber: number;
-    totalStages: number;
-    progress: number;
-    message: string;
-    encoder?: string;
-  };
+  processingStatus?: StageProgressInfo;
   onComplete?: () => void;
   onError?: (error: string) => void;
 }
@@ -19,6 +13,14 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
   onError: _onError,
 }) => {
   const [_dots, _setDots] = useState('');
+  const [lastBufferingStatus, setLastBufferingStatus] = useState<BufferingStatus | undefined>();
+
+  // Persist buffering status to prevent flickering
+  useEffect(() => {
+    if (processingStatus?.bufferingStatus) {
+      setLastBufferingStatus(processingStatus.bufferingStatus);
+    }
+  }, [processingStatus?.bufferingStatus]);
 
   // Animate dots for loading effect
   useEffect(() => {
@@ -122,12 +124,32 @@ const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
                 }
               }
 
+              // Frame counter logic: only show for CAPTURING stage when it's current and we have data
+              const isCapturingStage = stage.key === 'CAPTURING';
+              const isThisStageCurrent = index + 1 === stageNumber;
+              const hasBufferingData =
+                lastBufferingStatus &&
+                lastBufferingStatus.currentFrame !== undefined &&
+                lastBufferingStatus.totalFrames !== undefined;
+              const showFrameCounter =
+                isCapturingStage &&
+                isThisStageCurrent &&
+                hasBufferingData &&
+                !isError &&
+                !isCompleted;
+
               return (
                 <div key={stage.key} className={`ytgif-stage-item ${stageItemClass}`}>
                   <div className="ytgif-stage-indicator">{indicator}</div>
                   <div className="ytgif-stage-content">
                     <span className="ytgif-stage-icon">{stage.icon}</span>
                     <span className="ytgif-stage-name">{stage.name}</span>
+                    {showFrameCounter && lastBufferingStatus && (
+                      <span className="ytgif-stage-frame-counter">
+                        Frame {lastBufferingStatus.currentFrame}/{lastBufferingStatus.totalFrames} ~
+                        {lastBufferingStatus.estimatedTimeRemaining}s
+                      </span>
+                    )}
                   </div>
                 </div>
               );

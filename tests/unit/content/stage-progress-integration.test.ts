@@ -1,4 +1,4 @@
-import { StageProgressInfo } from '../../../src/content/gif-processor';
+import { StageProgressInfo } from '@/types';
 
 // Mock content script index
 const mockProgressCallbacks: Array<(stageInfo: StageProgressInfo) => void> = [];

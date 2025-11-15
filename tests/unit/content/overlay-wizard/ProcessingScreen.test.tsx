@@ -298,7 +298,7 @@ describe('ProcessingScreen', () => {
   });
 
   describe('Loading Animation', () => {
-    it('should show loading dots when processing', () => {
+    it('should show frame counter in CAPTURING stage when data available', () => {
       render(
         <ProcessingScreen
           processingStatus={{
@@ -307,15 +307,40 @@ describe('ProcessingScreen', () => {
             totalStages: 4,
             progress: 25,
             message: 'Reading video data...',
+            bufferingStatus: {
+              isBuffering: false,
+              currentFrame: 10,
+              totalFrames: 50,
+              bufferedPercentage: 80,
+              estimatedTimeRemaining: 15,
+            },
           }}
           onComplete={mockOnComplete}
           onError={mockOnError}
         />
       );
 
-      const loadingDotsContainer = screen.getByText('Reading video data...').nextElementSibling;
-      expect(loadingDotsContainer).toHaveClass('ytgif-loading-dots');
+      // Frame counter should be visible in the stage item
+      expect(screen.getByText(/Frame 10\/50/)).toBeInTheDocument();
+      expect(screen.getByText(/~15s/)).toBeInTheDocument();
+    });
 
+    it('should show loading dots during non-CAPTURING stages', () => {
+      render(
+        <ProcessingScreen
+          processingStatus={{
+            stage: 'ENCODING',
+            stageNumber: 3,
+            totalStages: 4,
+            progress: 75,
+            message: 'Encoding frames...',
+          }}
+          onComplete={mockOnComplete}
+          onError={mockOnError}
+        />
+      );
+
+      // During non-CAPTURING stages, loading dots are still shown
       const dots = screen.getAllByText('⚬');
       expect(dots).toHaveLength(3);
     });

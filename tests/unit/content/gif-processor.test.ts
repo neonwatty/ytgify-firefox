@@ -1,4 +1,5 @@
-import { ContentScriptGifProcessor, StageProgressInfo } from '@/content/gif-processor';
+import { ContentScriptGifProcessor } from '@/content/gif-processor';
+import { StageProgressInfo } from '@/types';
 import { createError } from '@/lib/errors';
 import * as encoders from '@/lib/encoders';
 import { browserMock } from '../__mocks__/browser-mocks';
