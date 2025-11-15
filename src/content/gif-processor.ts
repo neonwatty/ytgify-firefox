@@ -431,8 +431,10 @@ export class ContentScriptGifProcessor {
 
     // Frame progress tracking
     const captureStartTime = performance.now();
+    let lastFrameTime = performance.now();
     let lastProgressEmit = 0;
     const frameTimes: number[] = [];
+    let lastDisplayedETA = Infinity; // Track last displayed ETA for monotonic decreasing
     const PROGRESS_THROTTLE_MS = 500; // Emit progress max every 500ms
 
     // Store original state
@@ -599,8 +601,10 @@ export class ContentScriptGifProcessor {
       frames.push(frameCanvas);
 
       // Track frame capture time for ETA calculation
-      const frameTime = performance.now() - captureStartTime;
+      const currentTime = performance.now();
+      const frameTime = currentTime - lastFrameTime;
       frameTimes.push(frameTime);
+      lastFrameTime = currentTime;
 
       // Emit progress update (throttled to every 500ms)
       const now = performance.now();
@@ -621,7 +625,11 @@ export class ContentScriptGifProcessor {
         const avgFrameTime =
           recentFrameTimes.reduce((sum, time) => sum + time, 0) / recentFrameTimes.length;
         const remainingFrames = frameCount - frames.length;
-        const estimatedTimeRemaining = Math.ceil((remainingFrames * avgFrameTime) / 1000);
+        let estimatedTimeRemaining = Math.ceil((remainingFrames * avgFrameTime) / 1000);
+
+        // Ensure ETA is monotonically decreasing (never show an increase)
+        estimatedTimeRemaining = Math.min(estimatedTimeRemaining, lastDisplayedETA);
+        lastDisplayedETA = estimatedTimeRemaining;
 
         // Emit progress with buffering status
         const bufferingStatus: BufferingStatus = {
