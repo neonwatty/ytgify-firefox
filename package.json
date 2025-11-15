@@ -12,6 +12,7 @@
     "dev:webpack": "webpack --config webpack.config.cjs --mode development --watch",
     "dev:firefox": "web-ext run --source-dir dist --firefox-profile ytgify-dev --keep-profile-changes",
     "build": "webpack --config webpack.config.cjs --mode production",
+    "build:production": "bash scripts/build-production.sh",
     "build:watch": "webpack --config webpack.config.cjs --mode development --watch",
     "clean": "rimraf dist",
     "typecheck": "tsc --noEmit",
