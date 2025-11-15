@@ -10,6 +10,7 @@ const PopupApp: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [showButton, setShowButton] = React.useState(false);
   const [showFooter, setShowFooter] = React.useState(false);
+  const [version, setVersion] = React.useState('');
 
   // Load button visibility setting
   React.useEffect(() => {
@@ -61,6 +62,19 @@ const PopupApp: React.FC = () => {
       }
     };
     checkFooter();
+  }, []);
+
+  // Load extension version from manifest
+  React.useEffect(() => {
+    try {
+      const manifest = browser.runtime.getManifest();
+      if (manifest?.version) {
+        setVersion(manifest.version);
+      }
+    } catch (error) {
+      console.error('[Popup] Failed to get version:', error);
+      setVersion('');
+    }
   }, []);
 
   // Handle toggle change
@@ -317,6 +331,13 @@ const PopupApp: React.FC = () => {
           <span>Enjoying YTGify? </span>
           <a onClick={handleReview}>Leave us a review!</a>
           <button className="dismiss-btn" onClick={handleDismissFooter}>×</button>
+        </div>
+      )}
+
+      {/* Version Display - Always Visible */}
+      {version && (
+        <div className="popup-version">
+          v{version}
         </div>
       )}
 

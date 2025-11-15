@@ -55,31 +55,32 @@ npm run sign     # Sign for Firefox Add-ons (requires API credentials)
 ## Architecture Overview
 
 ### Core Structure
-- **Background** (`src/background/`): Firefox event page, message routing, async job management
+- **Background** (`src/background/`): Firefox event page, message routing, async job management, extension migrations
 - **Content Script** (`src/content/`): YouTube integration, frame capture, React overlays, GIF processing
-- **Popup** (`src/popup/`): GIF library, settings UI
+- **Popup** (`src/popup/`): Settings UI, button visibility controls
 - **Shared** (`src/shared/`): Message bus, state management, error handling
 
 ### Key Components
 - **Frame Extraction** (`src/content/frame-extractor.ts`): Canvas-based frame capture from video element
-- **GIF Processor** (`src/content/gif-processor.ts`): Complete pipeline (extraction → overlay → encoding → save)
+- **GIF Processor** (`src/content/gif-processor.ts`): Complete pipeline (extraction → overlay → encoding → download)
 - **Encoders** (`src/lib/encoders/`): Factory for gifenc (primary) and gif.js (fallback)
 - **YouTube Integration** (`src/content/youtube-detector.ts`, `youtube-api-integration.ts`): Page detection, video element access, SPA navigation
 - **Overlay Wizard** (`src/content/overlay-wizard/`): React UI (QuickCapture → TextOverlay → Processing → Success)
 - **Resolution Scaler** (`src/processing/resolution-scaler.ts`): Memory-aware scaling (144p-480p presets)
+- **Migrations** (`src/background/migrations.ts`): Extension update migrations, handles cleanup of deprecated features
 
 ### Message Passing
 Typed request/response pattern using `browser.*` API. Most processing happens in content script. Message types in `src/types/messages.ts` and `src/shared/messages.ts`. Use type guards for safe handling.
 
 ### Storage
-- **browser.storage.local**: Primary storage for user preferences, settings
-- **IndexedDB**: Large blob data (`YouTubeGifStore` database with `gifs`, `thumbnails`, `metadata` stores)
-- Firefox has excellent IndexedDB support in extensions
+- **browser.storage.local**: Primary storage for user preferences, settings, engagement tracking
+- **IndexedDB**: Not used (removed in recent version - GIFs now download directly to browser downloads folder)
+- Migration system removes deprecated IndexedDB data on extension update
 
 ## Key Development Patterns
 
 ### GIF Creation Flow
-User opens wizard → collects parameters (time range, text, resolution, frame rate) → `gifProcessor.processVideoToGif()` orchestrates extraction/overlay/encoding/save → success screen with preview/download.
+User opens wizard → collects parameters (time range, text, resolution, frame rate) → `gifProcessor.processVideoToGif()` orchestrates extraction/overlay/encoding → success screen with preview/download → GIF downloads to browser downloads folder.
 
 ### YouTube Shorts
 Disabled due to technical limitations. Show user-friendly message when detected.

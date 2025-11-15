@@ -10,8 +10,8 @@ https://github.com/user-attachments/assets/6b9e72b6-032a-430d-9e4c-1d637f9aec20
 - **Visual segment selection** with draggable start/end markers on the timeline
 - **Live preview** of the GIF loop
 - **Text overlay tools** with customizable positioning and styling
-- **Personal GIF library** stored locally in the browser
-- **Export options** including download, clipboard copy, and library storage
+- **Instant downloads** directly to your browser's downloads folder
+- **Privacy-focused** - no data collection, everything processed locally
 
 ## Development Setup
 
@@ -122,9 +122,8 @@ This will:
 - Native Promise support in all APIs
 - Better privacy controls
 - Superior developer tools for extensions
-- Better IndexedDB support in content scripts
 - More flexible content script injection
-- Event pages instead of service workers
+- Event pages instead of service workers (better for extension lifecycle)
 
 ### API Differences
 - Uses `browser.*` API instead of `chrome.*`

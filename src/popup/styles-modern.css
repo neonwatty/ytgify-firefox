@@ -467,3 +467,19 @@ body {
 .popup-footer .dismiss-btn:hover {
   color: rgba(255, 255, 255, 0.8);
 }
+
+/* Version Display */
+.popup-version {
+  padding: 8px;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: auto;
+  user-select: none;
+}
+
+.popup-version:hover {
+  color: rgba(255, 255, 255, 0.6);
+}

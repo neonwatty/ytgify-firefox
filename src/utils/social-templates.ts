@@ -12,11 +12,11 @@ export function getTwitterTemplates(): TwitterTemplate[] {
     },
     {
       label: 'Medium',
-      text: 'YTGify is amazing! Create high-quality GIFs from YouTube videos instantly. Add text overlays, adjust quality, and save to your library. All without leaving YouTube!'
+      text: 'YTGify is amazing! Create high-quality GIFs from YouTube videos instantly. Add text overlays, adjust quality, and download them. All without leaving YouTube!'
     },
     {
       label: 'Long',
-      text: 'YTGify is the Chrome extension I didn\'t know I needed! Create GIFs from YouTube videos with custom text overlays, multiple quality settings, and a built-in library. Privacy-focused and completely free. Check it out!'
+      text: 'YTGify is the Chrome extension I didn\'t know I needed! Create GIFs from YouTube videos with custom text overlays and multiple quality settings. Privacy-focused and completely free. Check it out!'
     }
   ];
 }
@@ -29,8 +29,8 @@ Features:
 - One-click GIF creation right on YouTube
 - Custom text overlays
 - Multiple quality presets
-- Built-in GIF library
-- 100% private (local storage only)
+- Instant downloads to your device
+- 100% private (no data collection)
 
 It's free and open source!`;
 }
@@ -44,8 +44,8 @@ I've been using this Chrome extension and it's fantastic for creating GIFs direc
 - **No downloads needed** - Works right in your browser
 - **Text overlays** - Add custom text (top/bottom) with multiple fonts
 - **Quality control** - Choose from Fast, Balanced, or High Quality presets
-- **GIF library** - All your creations saved locally
-- **Privacy-focused** - No data collection, everything stays on your device
+- **Instant downloads** - GIFs download directly to your device
+- **Privacy-focused** - No data collection, everything stays private
 
 It's free, open source, and has no ads or watermarks. If you need to make GIFs from YouTube videos, this is the tool.`;
 }

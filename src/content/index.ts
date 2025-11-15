@@ -1433,10 +1433,6 @@ class YouTubeGifMaker {
       });
       console.info('[YTgify] Active GIF encoder:', result.metadata.encoder);
 
-      // Save to IndexedDB
-
-      await gifProcessor.saveGifToStorage(result.blob, result.metadata);
-
       // Increment engagement tracker
       await engagementTracker.incrementGifCount();
 
@@ -1755,8 +1751,8 @@ class YouTubeGifMaker {
         }
         // In wizard mode, the success screen handles navigation
       } catch (error) {
-        this.log('error', '[Content] Failed to save GIF', { error });
-        this.showGifCreationFeedback('error', 'GIF created but failed to save to library');
+        this.log('error', '[Content] Failed to create GIF', { error });
+        this.showGifCreationFeedback('error', 'GIF creation failed');
 
         // Still close overlay after error
         if (!this.isWizardMode) {
@@ -1825,67 +1821,6 @@ class YouTubeGifMaker {
     }
   }
 
-  // Save GIF directly to IndexedDB from content script
-  private async saveGifToIndexedDB(gifData: GifData): Promise<boolean> {
-    return new Promise((resolve) => {
-      try {
-        const dbName = 'YouTubeGifStore';
-        const request = indexedDB.open(dbName, 3);
-
-        request.onerror = () => {
-          this.log('error', '[Content] Failed to open IndexedDB');
-          resolve(false);
-        };
-
-        request.onupgradeneeded = (event) => {
-          const db = (event.target as IDBOpenDBRequest).result;
-
-          // Create stores if they don't exist
-          if (!db.objectStoreNames.contains('gifs')) {
-            const gifsStore = db.createObjectStore('gifs', { keyPath: 'id' });
-            gifsStore.createIndex('createdAt', 'metadata.createdAt', { unique: false });
-          }
-
-          if (!db.objectStoreNames.contains('thumbnails')) {
-            db.createObjectStore('thumbnails', { keyPath: 'gifId' });
-          }
-
-          if (!db.objectStoreNames.contains('metadata')) {
-            const metaStore = db.createObjectStore('metadata', { keyPath: 'id' });
-            metaStore.createIndex('youtubeUrl', 'youtubeUrl', { unique: false });
-          }
-        };
-
-        request.onsuccess = () => {
-          const db = request.result;
-          const transaction = db.transaction(['gifs'], 'readwrite');
-          const gifsStore = transaction.objectStore('gifs');
-
-          // Save GIF data
-          const gifRequest = gifsStore.put(gifData);
-
-          gifRequest.onsuccess = () => {
-            this.log('info', '[Content] GIF saved to IndexedDB successfully');
-            resolve(true);
-          };
-
-          gifRequest.onerror = () => {
-            this.log('error', '[Content] Failed to save GIF to store');
-            resolve(false);
-          };
-
-          transaction.onerror = () => {
-            this.log('error', '[Content] Transaction failed');
-            resolve(false);
-          };
-        };
-      } catch (error) {
-        this.log('error', '[Content] Exception in saveGifToIndexedDB', { error });
-        resolve(false);
-      }
-    });
-  }
-
   // Download GIF
   private downloadGif(dataUrl: string, title?: string) {
     // Convert data URL to blob
@@ -1909,17 +1844,17 @@ class YouTubeGifMaker {
       });
   }
 
-  // Open extension popup (library)
+  // Open extension popup
   private openExtensionPopup() {
     // Send message to background to open popup
     browser.runtime
       .sendMessage({
         type: 'OPEN_POPUP',
-        data: { tab: 'library' },
+        data: {},
       })
       .catch(() => {
         // If opening popup fails, show feedback
-        this.showGifCreationFeedback('info', 'Click the extension icon to view your library');
+        this.showGifCreationFeedback('info', 'Click the extension icon to open settings');
       });
   }
 
