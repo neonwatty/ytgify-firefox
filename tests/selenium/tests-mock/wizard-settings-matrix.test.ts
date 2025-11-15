@@ -35,7 +35,7 @@ describe('Mock E2E: Wizard Settings Matrix (Selenium)', () => {
 
     const headless = process.env.HEADLESS !== 'false';
     driver = await createFirefoxDriver(undefined, headless);
-  }, 30000);
+  }, 60000);
 
   afterEach(async () => {
     if (driver) {
