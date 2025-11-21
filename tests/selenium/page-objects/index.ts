@@ -8,4 +8,3 @@ export { QuickCapturePage } from './QuickCapturePage';
 export { TextOverlayPage } from './TextOverlayPage';
 export { ProcessingPage } from './ProcessingPage';
 export { SuccessPage } from './SuccessPage';
-export { NewsletterWizardPage } from './NewsletterWizardPage';
