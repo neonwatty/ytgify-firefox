@@ -88,6 +88,7 @@ interface GifProcessingResult {
 export class ContentScriptGifProcessor {
   private static instance: ContentScriptGifProcessor;
   private isProcessing = false;
+  private isAborting = false;
   private messageTimer: NodeJS.Timeout | null = null;
   private currentStage: string | null = null;
   private messageIndex = 0;
@@ -264,6 +265,19 @@ export class ContentScriptGifProcessor {
   }
 
   /**
+   * Abort the current processing operation
+   */
+  public abortProcessing(): void {
+    if (!this.isProcessing) {
+      return;
+    }
+
+    logger.info('[ContentScriptGifProcessor] Aborting GIF processing');
+    this.isAborting = true;
+    this.stopMessageCycling();
+  }
+
+  /**
    * Process video element to GIF entirely in content script
    */
   public async processVideoToGif(
@@ -276,6 +290,7 @@ export class ContentScriptGifProcessor {
     }
 
     this.isProcessing = true;
+    this.isAborting = false;
     this.progressCallback = onProgress;
     const startTime = performance.now();
 
@@ -338,8 +353,15 @@ export class ContentScriptGifProcessor {
       });
 
       return { blob: gifBlob, metadata };
+    } catch (error) {
+      // Re-throw abort errors with a user-friendly message
+      if (this.isAborting) {
+        throw createError('gif', 'GIF creation was cancelled');
+      }
+      throw error;
     } finally {
       this.isProcessing = false;
+      this.isAborting = false;
       this.stopMessageCycling();
       this.progressCallback = undefined;
     }
@@ -445,6 +467,16 @@ export class ContentScriptGifProcessor {
     videoElement.pause();
 
     for (let i = 0; i < frameCount; i++) {
+      // Check if processing was aborted
+      if (this.isAborting) {
+        // Restore video state before throwing
+        videoElement.currentTime = originalTime;
+        if (wasPlaying) {
+          videoElement.play().catch(() => {});
+        }
+        throw createError('gif', 'GIF creation was cancelled');
+      }
+
       const captureTime = startTime + i * frameInterval;
 
       logger.debug(
@@ -469,7 +501,8 @@ export class ContentScriptGifProcessor {
       // 1. We're close to the target time AND ready, OR
       // 2. The video has stopped moving (stuck), OR
       // 3. We've hit the max attempts
-      while (attempts < maxAttempts) {
+      // 4. Processing was aborted
+      while (attempts < maxAttempts && !this.isAborting) {
         const currentVideoTime = videoElement.currentTime;
         const distanceToTarget = Math.abs(currentVideoTime - captureTime);
 
@@ -703,6 +736,11 @@ export class ContentScriptGifProcessor {
     frames: HTMLCanvasElement[],
     options: GifProcessingOptions
   ): Promise<EncodingResult> {
+    // Check if processing was aborted
+    if (this.isAborting) {
+      throw createError('gif', 'GIF creation was cancelled');
+    }
+
     const { frameRate = 10, quality = 'medium' } = options;
     console.log(
       '[gif-processor] encodeGif - frameRate from options:',
