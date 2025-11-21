@@ -47,9 +47,19 @@ export async function createFirefoxDriver(
     await driver.installAddon(extPath, true); // true = temporary
     console.log('[Selenium] Extension installed successfully');
 
-    // Wait for extension to initialize
+    // Install uBlock Origin to block YouTube ads in tests
+    const uBlockPath = path.join(process.cwd(), 'tests/selenium/extensions/ublock-origin.xpi');
+    try {
+      await driver.installAddon(uBlockPath, true);
+      console.log('[Selenium] uBlock Origin installed successfully');
+    } catch (error) {
+      console.warn('[Selenium] Failed to install uBlock Origin (optional):', error);
+      // Continue anyway - ads just make tests slower but shouldn't break them
+    }
+
+    // Wait for extensions to initialize
     // Note: Extension automatically shows button on localhost for E2E tests
-    await driver.sleep(1000);
+    await driver.sleep(2000);
   } catch (error) {
     console.error('[Selenium] Failed to install extension:', error);
     await driver.quit();

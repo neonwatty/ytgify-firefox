@@ -118,3 +118,6 @@ test-output-*.gif
 .history/
 .vscode-test/
 *.vsix
+
+# Selenium test extensions
+tests/selenium/extensions/*.xpi

@@ -570,23 +570,36 @@ export class ContentScriptGifProcessor {
         const lastFrame = frames[frames.length - 1];
         if (areCanvasFramesSimilar(this.mainCanvas!, lastFrame)) {
           isDuplicate = true;
-          consecutiveDuplicates++;
-          logger.warn(
-            `[ContentScriptGifProcessor] ⚠️ DUPLICATE FRAME at ${i + 1}/${frameCount}: video stuck at ${videoElement.currentTime.toFixed(3)}s (wanted ${captureTime.toFixed(3)}s, prev was ${previousTime.toFixed(3)}s) [consecutive: ${consecutiveDuplicates}/${MAX_CONSECUTIVE_DUPLICATES}]`
-          );
 
-          // Abort if we have too many consecutive duplicates (video stuck)
-          if (consecutiveDuplicates >= MAX_CONSECUTIVE_DUPLICATES) {
-            logger.error(
-              `[ContentScriptGifProcessor] Aborting: ${consecutiveDuplicates} consecutive duplicate frames. Video buffering stuck.`
+          // Differentiate between buffering stuck (seek failed) and static content (seek succeeded)
+          const seekSucceeded = Math.abs(videoElement.currentTime - captureTime) <= 0.1;
+
+          if (seekSucceeded) {
+            // Video is at correct position but frame is duplicate - this is valid static content
+            logger.debug(
+              `[ContentScriptGifProcessor] Static content detected at frame ${i + 1}/${frameCount}: duplicate frame at correct position ${videoElement.currentTime.toFixed(3)}s`
             );
-            throw createError(
-              'video',
-              `Video buffering stuck (${consecutiveDuplicates} consecutive identical frames). Network too slow or video unavailable. Try a shorter clip or better network.`
+            // Don't increment consecutiveDuplicates - static content is valid
+          } else {
+            // Video failed to seek to correct position - this indicates buffering stuck
+            consecutiveDuplicates++;
+            logger.warn(
+              `[ContentScriptGifProcessor] ⚠️ SEEK FAILURE at ${i + 1}/${frameCount}: video stuck at ${videoElement.currentTime.toFixed(3)}s (wanted ${captureTime.toFixed(3)}s, prev was ${previousTime.toFixed(3)}s) [consecutive: ${consecutiveDuplicates}/${MAX_CONSECUTIVE_DUPLICATES}]`
             );
+
+            // Abort if we have too many consecutive seek failures (video stuck)
+            if (consecutiveDuplicates >= MAX_CONSECUTIVE_DUPLICATES) {
+              logger.error(
+                `[ContentScriptGifProcessor] Aborting: ${consecutiveDuplicates} consecutive seek failures. Video buffering stuck.`
+              );
+              throw createError(
+                'video',
+                `Video buffering stuck (${consecutiveDuplicates} consecutive seek failures). Network too slow or video unavailable. Try a shorter clip or better network.`
+              );
+            }
           }
 
-          // Try one more aggressive seek attempt if we have a duplicate
+          // Try one more aggressive seek attempt if we have a seek failure
           if (Math.abs(videoElement.currentTime - captureTime) > 0.01) {
             logger.info(`[ContentScriptGifProcessor] Attempting recovery seek for frame ${i + 1}`);
 
