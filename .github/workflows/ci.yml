@@ -85,7 +85,7 @@ jobs:
           - shard: 2
             pattern: "wizard-basic|gif-output-validation|debug-gif-parser"
           - shard: 3
-            pattern: "newsletter-wizard|diagnostic-video|debug-gif-settings"
+            pattern: "diagnostic-video|debug-gif-settings"
 
     steps:
       - name: Checkout code
