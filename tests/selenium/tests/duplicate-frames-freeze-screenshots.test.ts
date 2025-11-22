@@ -117,7 +117,16 @@ describe('Selenium E2E: Duplicate Frames with Screenshots', () => {
       expect(gifUrl).toBeTruthy();
       expect(gifUrl!.startsWith('data:image/gif') || gifUrl!.startsWith('blob:')).toBe(true);
 
-      console.log('[Test] ✅ Test complete - all screenshots saved to:');
+      // Save the GIF file
+      console.log('[Test] Step 10: Saving GIF output...');
+      if (gifUrl!.startsWith('data:image/gif')) {
+        const base64Data = gifUrl!.split(',')[1];
+        const gifPath = path.join(screenshotDir, 'output.gif');
+        fs.writeFileSync(gifPath, base64Data, 'base64');
+        console.log(`[GIF] Saved: output.gif`);
+      }
+
+      console.log('[Test] ✅ Test complete - all screenshots and GIF saved to:');
       console.log(`[Test] ${screenshotDir}`);
     },
     testTimeout
