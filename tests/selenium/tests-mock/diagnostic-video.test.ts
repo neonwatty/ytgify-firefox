@@ -24,7 +24,7 @@ describe('Diagnostic: Video Playback (Selenium Mock)', () => {
     mockServerUrl = state.serverUrl;
 
     const headless = process.env.HEADLESS !== 'false';
-    driver = await createFirefoxDriver(undefined, headless);
+    driver = await createFirefoxDriver(undefined, headless, false);
   }, 60000);
 
   afterEach(async () => {
