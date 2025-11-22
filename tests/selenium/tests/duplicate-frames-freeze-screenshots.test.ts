@@ -72,43 +72,49 @@ describe('Selenium E2E: Duplicate Frames with Screenshots', () => {
       await driver.sleep(500);
       await takeScreenshot(driver, '03-wizard-opened');
 
-      // Step 4: Set time range
-      console.log('[Test] Step 4: Set time range');
+      // Step 4: Select 480p resolution (largest)
+      console.log('[Test] Step 4: Select 480p resolution');
+      await quickCapture.selectResolution('480p');
+      await driver.sleep(500);
+      await takeScreenshot(driver, '04-resolution-480p');
+
+      // Step 5: Set time range
+      console.log('[Test] Step 5: Set time range');
       const endTime = 533.8;
       await quickCapture.setTimeRange(startTime, endTime, true);
       await driver.sleep(500);
-      await takeScreenshot(driver, '04-time-range-set');
+      await takeScreenshot(driver, '05-time-range-set');
 
-      // Step 5: Select 15 fps
-      console.log('[Test] Step 5: Select 15 fps');
+      // Step 6: Select 15 fps
+      console.log('[Test] Step 6: Select 15 fps');
       await quickCapture.selectFps('15');
       await driver.sleep(500);
-      await takeScreenshot(driver, '05-fps-selected');
+      await takeScreenshot(driver, '06-fps-selected');
 
-      // Step 6: Click Next
-      console.log('[Test] Step 6: Proceed to text overlay');
+      // Step 7: Click Next
+      console.log('[Test] Step 7: Proceed to text overlay');
       await quickCapture.clickNext();
       await textOverlay.waitForScreen();
       await driver.sleep(500);
-      await takeScreenshot(driver, '06-text-overlay-screen');
+      await takeScreenshot(driver, '07-text-overlay-screen');
 
-      // Step 7: Skip text overlay
-      console.log('[Test] Step 7: Skip text overlay');
+      // Step 8: Skip text overlay
+      console.log('[Test] Step 8: Skip text overlay');
       await textOverlay.clickSkip();
       await driver.sleep(1000);
-      await takeScreenshot(driver, '07-processing-started');
+      await takeScreenshot(driver, '08-processing-started');
 
-      // Step 8: Wait for processing (take screenshots during)
-      console.log('[Test] Step 8: Processing GIF...');
+      // Step 9: Wait for processing (take screenshots during)
+      console.log('[Test] Step 9: Processing GIF...');
       await driver.sleep(5000);
-      await takeScreenshot(driver, '08-processing-progress');
+      await takeScreenshot(driver, '09-processing-progress');
 
       await processing.waitForCompletion(120000);
       await driver.sleep(500);
-      await takeScreenshot(driver, '09-processing-complete');
+      await takeScreenshot(driver, '10-processing-complete');
 
-      // Step 9: Verify success
-      console.log('[Test] Step 9: Verify GIF created');
+      // Step 10: Verify success
+      console.log('[Test] Step 10: Verify GIF created');
       await success.waitForScreen();
       await driver.sleep(1000);
       await takeScreenshot(driver, '10-success-screen');
