@@ -65,8 +65,8 @@ export class YouTubePage {
         return video && !isNaN(video.duration) && isFinite(video.duration) ? video.duration : 0;
       });
 
-      // Video loaded with valid duration
-      if (duration > 10) {
+      // Video loaded with valid duration (works for both mock and real videos)
+      if (duration > 0) {
         console.log(`[YouTubePage] Video loaded (duration: ${duration.toFixed(3)}s)`);
         return;
       }
