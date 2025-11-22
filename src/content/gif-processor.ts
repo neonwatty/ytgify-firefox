@@ -88,6 +88,7 @@ interface GifProcessingResult {
 export class ContentScriptGifProcessor {
   private static instance: ContentScriptGifProcessor;
   private isProcessing = false;
+  private isAborting = false;
   private messageTimer: NodeJS.Timeout | null = null;
   private currentStage: string | null = null;
   private messageIndex = 0;
@@ -264,6 +265,19 @@ export class ContentScriptGifProcessor {
   }
 
   /**
+   * Abort the current processing operation
+   */
+  public abortProcessing(): void {
+    if (!this.isProcessing) {
+      return;
+    }
+
+    logger.info('[ContentScriptGifProcessor] Aborting GIF processing');
+    this.isAborting = true;
+    this.stopMessageCycling();
+  }
+
+  /**
    * Process video element to GIF entirely in content script
    */
   public async processVideoToGif(
@@ -276,6 +290,7 @@ export class ContentScriptGifProcessor {
     }
 
     this.isProcessing = true;
+    this.isAborting = false;
     this.progressCallback = onProgress;
     const startTime = performance.now();
 
@@ -338,8 +353,15 @@ export class ContentScriptGifProcessor {
       });
 
       return { blob: gifBlob, metadata };
+    } catch (error) {
+      // Re-throw abort errors with a user-friendly message
+      if (this.isAborting) {
+        throw createError('gif', 'GIF creation was cancelled');
+      }
+      throw error;
     } finally {
       this.isProcessing = false;
+      this.isAborting = false;
       this.stopMessageCycling();
       this.progressCallback = undefined;
     }
@@ -445,6 +467,16 @@ export class ContentScriptGifProcessor {
     videoElement.pause();
 
     for (let i = 0; i < frameCount; i++) {
+      // Check if processing was aborted
+      if (this.isAborting) {
+        // Restore video state before throwing
+        videoElement.currentTime = originalTime;
+        if (wasPlaying) {
+          videoElement.play().catch(() => {});
+        }
+        throw createError('gif', 'GIF creation was cancelled');
+      }
+
       const captureTime = startTime + i * frameInterval;
 
       logger.debug(
@@ -469,7 +501,8 @@ export class ContentScriptGifProcessor {
       // 1. We're close to the target time AND ready, OR
       // 2. The video has stopped moving (stuck), OR
       // 3. We've hit the max attempts
-      while (attempts < maxAttempts) {
+      // 4. Processing was aborted
+      while (attempts < maxAttempts && !this.isAborting) {
         const currentVideoTime = videoElement.currentTime;
         const distanceToTarget = Math.abs(currentVideoTime - captureTime);
 
@@ -537,23 +570,36 @@ export class ContentScriptGifProcessor {
         const lastFrame = frames[frames.length - 1];
         if (areCanvasFramesSimilar(this.mainCanvas!, lastFrame)) {
           isDuplicate = true;
-          consecutiveDuplicates++;
-          logger.warn(
-            `[ContentScriptGifProcessor] ⚠️ DUPLICATE FRAME at ${i + 1}/${frameCount}: video stuck at ${videoElement.currentTime.toFixed(3)}s (wanted ${captureTime.toFixed(3)}s, prev was ${previousTime.toFixed(3)}s) [consecutive: ${consecutiveDuplicates}/${MAX_CONSECUTIVE_DUPLICATES}]`
-          );
 
-          // Abort if we have too many consecutive duplicates (video stuck)
-          if (consecutiveDuplicates >= MAX_CONSECUTIVE_DUPLICATES) {
-            logger.error(
-              `[ContentScriptGifProcessor] Aborting: ${consecutiveDuplicates} consecutive duplicate frames. Video buffering stuck.`
+          // Differentiate between buffering stuck (seek failed) and static content (seek succeeded)
+          const seekSucceeded = Math.abs(videoElement.currentTime - captureTime) <= 0.1;
+
+          if (seekSucceeded) {
+            // Video is at correct position but frame is duplicate - this is valid static content
+            logger.debug(
+              `[ContentScriptGifProcessor] Static content detected at frame ${i + 1}/${frameCount}: duplicate frame at correct position ${videoElement.currentTime.toFixed(3)}s`
             );
-            throw createError(
-              'video',
-              `Video buffering stuck (${consecutiveDuplicates} consecutive identical frames). Network too slow or video unavailable. Try a shorter clip or better network.`
+            // Don't increment consecutiveDuplicates - static content is valid
+          } else {
+            // Video failed to seek to correct position - this indicates buffering stuck
+            consecutiveDuplicates++;
+            logger.warn(
+              `[ContentScriptGifProcessor] ⚠️ SEEK FAILURE at ${i + 1}/${frameCount}: video stuck at ${videoElement.currentTime.toFixed(3)}s (wanted ${captureTime.toFixed(3)}s, prev was ${previousTime.toFixed(3)}s) [consecutive: ${consecutiveDuplicates}/${MAX_CONSECUTIVE_DUPLICATES}]`
             );
+
+            // Abort if we have too many consecutive seek failures (video stuck)
+            if (consecutiveDuplicates >= MAX_CONSECUTIVE_DUPLICATES) {
+              logger.error(
+                `[ContentScriptGifProcessor] Aborting: ${consecutiveDuplicates} consecutive seek failures. Video buffering stuck.`
+              );
+              throw createError(
+                'video',
+                `Video buffering stuck (${consecutiveDuplicates} consecutive seek failures). Network too slow or video unavailable. Try a shorter clip or better network.`
+              );
+            }
           }
 
-          // Try one more aggressive seek attempt if we have a duplicate
+          // Try one more aggressive seek attempt if we have a seek failure
           if (Math.abs(videoElement.currentTime - captureTime) > 0.01) {
             logger.info(`[ContentScriptGifProcessor] Attempting recovery seek for frame ${i + 1}`);
 
@@ -703,6 +749,11 @@ export class ContentScriptGifProcessor {
     frames: HTMLCanvasElement[],
     options: GifProcessingOptions
   ): Promise<EncodingResult> {
+    // Check if processing was aborted
+    if (this.isAborting) {
+      throw createError('gif', 'GIF creation was cancelled');
+    }
+
     const { frameRate = 10, quality = 'medium' } = options;
     console.log(
       '[gif-processor] encodeGif - frameRate from options:',

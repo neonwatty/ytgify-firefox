@@ -41,11 +41,40 @@ export class YouTubePage {
       timeout
     );
 
+    // Wait for ads to finish or be skippable
+    await this.waitForAdsToFinish(30000);
+
     // Wait for GIF button to be injected
     await waitForElementVisible(this.driver, '.ytgif-button', timeout);
 
     // Small delay for stability
     await sleep(this.driver, 500);
+  }
+
+  /**
+   * Wait for video content to load (uBlock Origin blocks ads)
+   */
+  async waitForAdsToFinish(timeout: number = 10000): Promise<void> {
+    // With uBlock Origin, ads are blocked so we just need to verify video loaded
+    console.log('[YouTubePage] Waiting for video content to load (ads blocked by uBlock)...');
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeout) {
+      const duration = await executeScript<number>(this.driver, () => {
+        const video = document.querySelector('video') as HTMLVideoElement;
+        return video && !isNaN(video.duration) && isFinite(video.duration) ? video.duration : 0;
+      });
+
+      // Video loaded with valid duration (works for both mock and real videos)
+      if (duration > 0) {
+        console.log(`[YouTubePage] Video loaded (duration: ${duration.toFixed(3)}s)`);
+        return;
+      }
+
+      await sleep(this.driver, 500);
+    }
+
+    console.warn('[YouTubePage] Video duration check timeout, proceeding anyway');
   }
 
   /**

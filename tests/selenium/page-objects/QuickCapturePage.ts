@@ -77,14 +77,19 @@ export class QuickCapturePage {
     return null;
   }
 
-  async setTimeRange(startSeconds: number, endSeconds: number): Promise<void> {
+  async setTimeRange(startSeconds: number, endSeconds: number, skipValidation: boolean = false): Promise<void> {
     const videoDuration = await this.getVideoDuration();
     const targetDuration = endSeconds - startSeconds;
 
-    // Validate inputs
-    if (startSeconds < 0 || endSeconds > videoDuration || startSeconds >= endSeconds) {
+    // Validate inputs (skip for tests with unreliable YouTube duration detection)
+    if (!skipValidation && (startSeconds < 0 || endSeconds > videoDuration || startSeconds >= endSeconds)) {
       console.warn(`[Test] Invalid time range: ${startSeconds}-${endSeconds}s (video duration: ${videoDuration}s)`);
       throw new Error(`Invalid time range: ${startSeconds}-${endSeconds}s`);
+    }
+
+    // Log warning but continue if validation skipped
+    if (skipValidation && endSeconds > videoDuration) {
+      console.warn(`[Test] Skipping validation: ${startSeconds}-${endSeconds}s exceeds detected duration ${videoDuration}s (YouTube may not have loaded full duration)`);
     }
 
     // Step 1: Click on timeline to set start position
@@ -207,10 +212,38 @@ export class QuickCapturePage {
   }
 
   private async getVideoDuration(): Promise<number> {
-    return executeScript<number>(this.driver, () => {
-      const video = document.querySelector('video') as HTMLVideoElement;
-      return video && !isNaN(video.duration) ? video.duration : 30;
-    });
+    // YouTube sometimes doesn't load full duration immediately for long videos
+    // Retry with increasing durations until we get a stable reading
+    let lastDuration = 0;
+    let stableCount = 0;
+    const maxRetries = 20;
+
+    for (let i = 0; i < maxRetries; i++) {
+      const duration = await executeScript<number>(this.driver, () => {
+        const video = document.querySelector('video') as HTMLVideoElement;
+        return video && !isNaN(video.duration) && isFinite(video.duration) ? video.duration : 0;
+      });
+
+      console.log(`[QuickCapturePage] Duration check ${i + 1}/${maxRetries}: ${duration.toFixed(3)}s`);
+
+      // Check if duration is stable (hasn't changed for 3 consecutive checks)
+      if (Math.abs(duration - lastDuration) < 0.1) {
+        stableCount++;
+        if (stableCount >= 3) {
+          console.log(`[QuickCapturePage] Final duration: ${duration.toFixed(3)}s (stable)`);
+          return duration > 0 ? duration : 30;
+        }
+      } else {
+        stableCount = 0;
+      }
+
+      lastDuration = duration;
+      await sleep(this.driver, 200);
+    }
+
+    // Fallback to last known duration
+    console.log(`[QuickCapturePage] Final duration: ${lastDuration.toFixed(3)}s (timeout fallback)`);
+    return lastDuration > 0 ? lastDuration : 30;
   }
 
   async getTimeRangeValues(): Promise<{ start: number; end: number }> {

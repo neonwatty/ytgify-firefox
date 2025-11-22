@@ -348,6 +348,11 @@ class YouTubeGifMaker {
     overlayStateManager.on('deactivated', (_event) => {
       this.log('info', '[Content] Overlay state deactivated');
     });
+
+    // Listen for cancel processing event from wizard
+    window.addEventListener('ytgif-cancel-processing', () => {
+      this.handleCancelProcessing();
+    });
   }
 
   // Setup cleanup manager
@@ -993,6 +998,25 @@ class YouTubeGifMaker {
     }
 
     return compactSelectors.some((selector) => document.querySelector(selector) !== null);
+  }
+
+  private handleCancelProcessing() {
+    this.log('info', '[Content] Cancelling GIF processing');
+
+    // Abort the gif processor
+    gifProcessor.abortProcessing();
+
+    // Reset state
+    this.isCreatingGif = false;
+    this.processingStatus = undefined;
+    this.createdGifData = undefined;
+
+    // Dispatch state change event
+    window.dispatchEvent(
+      new CustomEvent('ytgif-creating-state', {
+        detail: { isCreating: false },
+      })
+    );
   }
 
   private async handleCreateGif(

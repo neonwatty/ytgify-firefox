@@ -38,7 +38,7 @@ describe('Mock E2E: GIF Output Validation (Selenium)', () => {
 
     // Create Firefox driver with extension loaded
     const headless = process.env.HEADLESS !== 'false';
-    driver = await createFirefoxDriver(undefined, headless);
+    driver = await createFirefoxDriver(undefined, headless, false);
   }, 60000);
 
   afterEach(async () => {
