@@ -52,69 +52,29 @@ export class YouTubePage {
   }
 
   /**
-   * Wait for ads to finish or skip them, then wait for actual video to load
+   * Wait for video content to load (uBlock Origin blocks ads)
    */
-  async waitForAdsToFinish(timeout: number = 60000): Promise<void> {
+  async waitForAdsToFinish(timeout: number = 10000): Promise<void> {
+    // With uBlock Origin, ads are blocked so we just need to verify video loaded
+    console.log('[YouTubePage] Waiting for video content to load (ads blocked by uBlock)...');
     const startTime = Date.now();
 
-    // Phase 1: Wait for ad to finish or be skippable
     while (Date.now() - startTime < timeout) {
-      // Check if ad is playing
-      const adPlaying = await executeScript<boolean>(this.driver, () => {
-        // Check for various ad indicators
-        const adBadge = document.querySelector('.ytp-ad-player-overlay, .video-ads, .ytp-ad-text');
-        const skipButton = document.querySelector('.ytp-ad-skip-button, .ytp-skip-ad-button');
-        return adBadge !== null || skipButton !== null;
-      });
-
-      if (!adPlaying) {
-        // No ad detected
-        console.log('[YouTubePage] No ad detected');
-        break;
-      }
-
-      console.log('[YouTubePage] Ad detected, checking if skippable...');
-
-      // Try to click skip button if available
-      try {
-        const skipButton = await this.driver.findElement({ css: '.ytp-ad-skip-button, .ytp-skip-ad-button' });
-        if (skipButton) {
-          await skipButton.click();
-          console.log('[YouTubePage] Clicked skip ad button');
-          await sleep(this.driver, 2000);
-          continue;
-        }
-      } catch {
-        // Skip button not available yet
-      }
-
-      // Wait a bit and check again
-      await sleep(this.driver, 1000);
-    }
-
-    // Phase 2: Wait for actual video content to load (duration should be much longer)
-    // If we're seeking to 529s, the video must be at least that long
-    console.log('[YouTubePage] Waiting for actual video content to load...');
-    const minExpectedDuration = 100; // Video should be at least 100s if it's real content
-    const videoLoadStartTime = Date.now();
-
-    while (Date.now() - videoLoadStartTime < 10000) {
       const duration = await executeScript<number>(this.driver, () => {
         const video = document.querySelector('video') as HTMLVideoElement;
         return video && !isNaN(video.duration) && isFinite(video.duration) ? video.duration : 0;
       });
 
-      console.log(`[YouTubePage] Video duration: ${duration.toFixed(3)}s`);
-
-      if (duration > minExpectedDuration) {
-        console.log(`[YouTubePage] Actual video loaded (duration: ${duration.toFixed(3)}s)`);
+      // Video loaded with valid duration
+      if (duration > 10) {
+        console.log(`[YouTubePage] Video loaded (duration: ${duration.toFixed(3)}s)`);
         return;
       }
 
-      await sleep(this.driver, 1000);
+      await sleep(this.driver, 500);
     }
 
-    console.warn('[YouTubePage] Video may still be loading, proceeding anyway');
+    console.warn('[YouTubePage] Video duration check timeout, proceeding anyway');
   }
 
   /**
