@@ -566,4 +566,258 @@ describe('TimelineScrubber', () => {
       expect(input).not.toHaveClass('error');
     });
   });
+
+  describe('Duration Input - Parsing', () => {
+    it('should initialize input with formatted duration value', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+      expect(input).toHaveValue('5.0');
+    });
+
+    it('should parse decimal format correctly', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '7.5' } });
+      fireEvent.blur(input);
+
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(0, 7.5);
+    });
+
+    it('should parse integer format correctly', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '10' } });
+      fireEvent.blur(input);
+
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(0, 10);
+    });
+
+    it('should strip trailing s suffix', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '8s' } });
+      fireEvent.blur(input);
+
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(0, 8);
+    });
+
+    it('should reject invalid format', () => {
+      const { container } = render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: 'abc' } });
+      fireEvent.blur(input);
+
+      const errorMessage = container.querySelector('#ytgif-duration-input-error');
+      expect(errorMessage).toHaveTextContent('Invalid number');
+    });
+
+    it('should handle empty input gracefully', () => {
+      const { container } = render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '' } });
+      fireEvent.blur(input);
+
+      const errorMessage = container.querySelector('#ytgif-duration-input-error');
+      expect(errorMessage).toHaveTextContent('Invalid number');
+    });
+  });
+
+  describe('Duration Input - Validation', () => {
+    it('should accept valid duration within bounds', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '10' } });
+      fireEvent.blur(input);
+
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(0, 10);
+    });
+
+    it('should reject duration less than 1 second', () => {
+      const { container } = render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '0.5' } });
+      fireEvent.blur(input);
+
+      const errorMessage = container.querySelector('#ytgif-duration-input-error');
+      expect(errorMessage).toHaveTextContent('Duration must be at least 1 second');
+    });
+
+    it('should reject duration exceeding remaining video time', () => {
+      const { container } = render(
+        <TimelineScrubber {...defaultProps} startTime={25} endTime={28} duration={30} />
+      );
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '10' } });
+      fireEvent.blur(input);
+
+      const errorMessage = container.querySelector('#ytgif-duration-input-error');
+      expect(errorMessage).toHaveTextContent('Max duration is 5.0s');
+    });
+
+    it('should accept duration at minimum (1s)', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '1' } });
+      fireEvent.blur(input);
+
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(0, 1);
+    });
+
+    it('should accept duration at max valid value', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={20} endTime={25} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      // Max valid duration is 10 (30 - 20)
+      fireEvent.change(input, { target: { value: '10' } });
+      fireEvent.blur(input);
+
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(20, 30);
+    });
+  });
+
+  describe('Duration Input - Synchronization', () => {
+    it('should update input when slider changes', () => {
+      const { rerender } = render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+      expect(input).toHaveValue('5.0');
+
+      rerender(<TimelineScrubber {...defaultProps} startTime={0} endTime={8} />);
+      expect(input).toHaveValue('8.0');
+    });
+
+    it('should not update input while user is typing (focused)', () => {
+      const { rerender } = render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.focus(input);
+      fireEvent.change(input, { target: { value: '7' } });
+
+      // Try to update via prop change (shouldn't affect focused input)
+      rerender(<TimelineScrubber {...defaultProps} startTime={0} endTime={10} />);
+      expect(input).toHaveValue('7');
+    });
+
+    it('should revert input on invalid input', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: 'invalid' } });
+      fireEvent.blur(input);
+
+      expect(input).toHaveValue('5.0');
+    });
+
+    it('should maintain start position when changing duration', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={10} endTime={15} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '8' } });
+      fireEvent.blur(input);
+
+      // Start should remain at 10, end should be 10 + 8 = 18
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(10, 18);
+    });
+  });
+
+  describe('Duration Input - Keyboard Controls', () => {
+    it('should apply input on Enter key', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} duration={30} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '10' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.blur(input);
+
+      expect(defaultProps.onRangeChange).toHaveBeenCalledWith(0, 10);
+    });
+
+    it('should revert input on Escape key', () => {
+      render(<TimelineScrubber {...defaultProps} startTime={0} endTime={5} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: '10' } });
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      expect(input).toHaveValue('5.0');
+      expect(defaultProps.onRangeChange).not.toHaveBeenCalledWith(0, 10);
+    });
+
+    it('should clear error on new input', () => {
+      const { container } = render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      // Trigger error
+      fireEvent.change(input, { target: { value: 'invalid' } });
+      fireEvent.blur(input);
+      expect(container.querySelector('#ytgif-duration-input-error')).toBeInTheDocument();
+
+      // Start typing again
+      fireEvent.change(input, { target: { value: '5' } });
+      expect(container.querySelector('#ytgif-duration-input-error')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Duration Input - Error States', () => {
+    it('should apply error class to input field', () => {
+      render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: 'invalid' } });
+      fireEvent.blur(input);
+
+      expect(input).toHaveClass('error');
+    });
+
+    it('should show error message below input', () => {
+      const { container } = render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: 'invalid' } });
+      fireEvent.blur(input);
+
+      const errorMessage = container.querySelector('#ytgif-duration-input-error');
+      expect(errorMessage).toBeInTheDocument();
+    });
+
+    it('should set aria-invalid when error present', () => {
+      render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: 'invalid' } });
+      fireEvent.blur(input);
+
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('should set aria-describedby when error present', () => {
+      render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: 'invalid' } });
+      fireEvent.blur(input);
+
+      expect(input).toHaveAttribute('aria-describedby', 'ytgif-duration-input-error');
+    });
+
+    it('should remove error class when valid input entered', () => {
+      render(<TimelineScrubber {...defaultProps} />);
+      const input = screen.getByLabelText('GIF duration in seconds');
+
+      fireEvent.change(input, { target: { value: 'invalid' } });
+      fireEvent.blur(input);
+      expect(input).toHaveClass('error');
+
+      fireEvent.change(input, { target: { value: '5' } });
+      expect(input).not.toHaveClass('error');
+    });
+  });
 });
