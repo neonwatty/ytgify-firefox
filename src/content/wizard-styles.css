@@ -879,6 +879,17 @@
   animation: errorShake 0.3s ease;
 }
 
+.ytgif-duration-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ytgif-duration-unit {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 @keyframes errorShake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }

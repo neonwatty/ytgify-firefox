@@ -28,6 +28,9 @@ const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [durationInputValue, setDurationInputValue] = useState('');
+  const [durationInputError, setDurationInputError] = useState<string | null>(null);
+  const [isDurationInputFocused, setIsDurationInputFocused] = useState(false);
 
   const dragStartRef = useRef<{ x: number; startTime: number }>({
     x: 0,
@@ -82,6 +85,18 @@ const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
     return null;
   };
 
+  // Validate duration
+  const validateDuration = (durationValue: number): string | null => {
+    if (durationValue < 1) {
+      return 'Duration must be at least 1 second';
+    }
+    const maxDuration = duration - startTime;
+    if (durationValue > maxDuration) {
+      return `Max duration is ${maxDuration.toFixed(1)}s`;
+    }
+    return null;
+  };
+
   // Update input value when startTime changes (scrubber dragged)
   useEffect(() => {
     if (!isInputFocused) {
@@ -93,6 +108,13 @@ const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   useEffect(() => {
     setDurationSliderValue(endTime - startTime);
   }, [startTime, endTime]);
+
+  // Update duration input value when slider changes
+  useEffect(() => {
+    if (!isDurationInputFocused) {
+      setDurationInputValue(durationSliderValue.toFixed(1));
+    }
+  }, [durationSliderValue, isDurationInputFocused]);
 
   // Handle slider change
   const handleDurationSliderChange = (value: number) => {
@@ -260,6 +282,56 @@ const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
     setIsInputFocused(true);
   };
 
+  // Handle duration input change
+  const handleDurationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDurationInputValue(e.target.value);
+    setDurationInputError(null);
+  };
+
+  // Handle duration input blur (apply duration)
+  const handleDurationInputBlur = () => {
+    setIsDurationInputFocused(false);
+    const trimmed = durationInputValue.trim();
+
+    // Remove trailing 's' if present
+    const valueToParse = trimmed.endsWith('s') ? trimmed.slice(0, -1) : trimmed;
+    const parsedDuration = parseFloat(valueToParse);
+
+    if (isNaN(parsedDuration)) {
+      setDurationInputError('Invalid number');
+      setDurationInputValue(durationSliderValue.toFixed(1));
+      return;
+    }
+
+    const validationError = validateDuration(parsedDuration);
+    if (validationError) {
+      setDurationInputError(validationError);
+      setDurationInputValue(durationSliderValue.toFixed(1));
+      return;
+    }
+
+    // Apply the new duration (keep start time fixed)
+    const newEnd = startTime + parsedDuration;
+    onRangeChange(startTime, newEnd);
+    setDurationInputError(null);
+  };
+
+  // Handle duration input focus
+  const handleDurationInputFocus = () => {
+    setIsDurationInputFocused(true);
+  };
+
+  // Handle duration input key down
+  const handleDurationInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    } else if (e.key === 'Escape') {
+      setDurationInputValue(durationSliderValue.toFixed(1));
+      setDurationInputError(null);
+      e.currentTarget.blur();
+    }
+  };
+
   // Add/remove event listeners for dragging only
   useEffect(() => {
     if (isDragging) {
@@ -366,8 +438,31 @@ const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
             )}
           </div>
           <div className="ytgif-timeline-control-right">
-            <span className="ytgif-control-label">Duration</span>
-            <span className="ytgif-control-value">{durationSliderValue.toFixed(1)}s</span>
+            <label htmlFor="ytgif-duration-input" className="ytgif-control-label">
+              Duration
+            </label>
+            <div className="ytgif-duration-input-wrapper">
+              <input
+                id="ytgif-duration-input"
+                type="text"
+                className={`ytgif-time-input-field ${durationInputError ? 'error' : ''}`}
+                value={durationInputValue}
+                onChange={handleDurationInputChange}
+                onBlur={handleDurationInputBlur}
+                onFocus={handleDurationInputFocus}
+                onKeyDown={handleDurationInputKeyDown}
+                placeholder="5.0"
+                aria-label="GIF duration in seconds"
+                aria-invalid={durationInputError !== null}
+                aria-describedby={durationInputError ? 'ytgif-duration-input-error' : undefined}
+              />
+              <span className="ytgif-duration-unit">s</span>
+            </div>
+            {durationInputError && (
+              <div id="ytgif-duration-input-error" className="ytgif-time-input-error-message">
+                {durationInputError}
+              </div>
+            )}
           </div>
         </div>
       </div>
