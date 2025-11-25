@@ -56,6 +56,26 @@ export const MOCK_VIDEOS: Record<string, MockVideo> = {
     height: 1080,
     filename: 'test-hd-15s.webm',
     description: '15-second Full HD video for resolution testing'
+  },
+
+  freezeFrame: {
+    id: 'mock-freeze',
+    title: 'Test Video with Freeze Frames (6s)',
+    duration: 6,
+    width: 640,
+    height: 360,
+    filename: 'test-freeze-6s.webm',
+    description: '6-second video with 2s freeze section (duplicate frames) at 4-6s mark for testing frame extraction bug fix'
+  },
+
+  longTimestamp: {
+    id: 'mock-long-60',
+    title: 'Test Long Video (60s)',
+    duration: 60,
+    width: 640,
+    height: 360,
+    filename: 'test-long-60s.webm',
+    description: '60-second video for testing long timestamp seeking and timeline handling'
   }
 };
 

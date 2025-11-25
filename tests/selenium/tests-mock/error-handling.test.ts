@@ -10,6 +10,12 @@ import * as fs from 'fs';
 import { createFirefoxDriver } from '../firefox-driver';
 import { getMockVideoUrl } from '../helpers';
 
+// Helper to click elements using JavaScript (avoids scroll into view issues)
+async function jsClick(driver: WebDriver, selector: string): Promise<void> {
+  const element = await driver.findElement(By.css(selector));
+  await driver.executeScript('arguments[0].click();', element);
+}
+
 describe('Mock E2E: Error Handling (Selenium)', () => {
   let driver: WebDriver;
   let mockServerUrl: string;
@@ -76,7 +82,7 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
       console.log('[Mock Test] Testing very short duration handling...');
 
       // For now, just proceed with default and verify no crash
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       // Should not crash, should handle gracefully
@@ -115,7 +121,7 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
       console.log('[Mock Test] Testing maximum duration handling...');
 
       // Proceed with wizard - it should either prevent > 10s or show warning
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       // Should handle gracefully
@@ -142,10 +148,10 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
         return elements.length > 0;
       }, 15000);
 
-      await driver.findElement(By.css('.ytgif-button')).click();
+      await jsClick(driver, '.ytgif-button');
       await driver.sleep(1000);
 
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       // Check if on text overlay screen
@@ -196,10 +202,10 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
         return elements.length > 0;
       }, 15000);
 
-      await driver.findElement(By.css('.ytgif-button')).click();
+      await jsClick(driver, '.ytgif-button');
       await driver.sleep(1000);
 
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       // Check if on text overlay screen
@@ -251,21 +257,21 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
         return elements.length > 0;
       }, 15000);
 
-      await driver.findElement(By.css('.ytgif-button')).click();
+      await jsClick(driver, '.ytgif-button');
       await driver.sleep(1000);
 
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       try {
         const skipButtons = await driver.findElements(By.xpath("//button[contains(text(), 'Skip')]"));
         if (skipButtons.length > 0) {
-          await skipButtons[0].click();
+          await driver.executeScript('arguments[0].click();', skipButtons[0]);
         } else {
-          await driver.findElement(By.css('.ytgif-button-primary')).click();
+          await jsClick(driver, '.ytgif-button-primary');
         }
       } catch {
-        await driver.findElement(By.css('.ytgif-button-primary')).click();
+        await jsClick(driver, '.ytgif-button-primary');
       }
 
       await driver.sleep(1000);
@@ -331,21 +337,21 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
         if (video) video.pause();
       });
 
-      await driver.findElement(By.css('.ytgif-button')).click();
+      await jsClick(driver, '.ytgif-button');
       await driver.sleep(1000);
 
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       try {
         const skipButtons = await driver.findElements(By.xpath("//button[contains(text(), 'Skip')]"));
         if (skipButtons.length > 0) {
-          await skipButtons[0].click();
+          await driver.executeScript('arguments[0].click();', skipButtons[0]);
         } else {
-          await driver.findElement(By.css('.ytgif-button-primary')).click();
+          await jsClick(driver, '.ytgif-button-primary');
         }
       } catch {
-        await driver.findElement(By.css('.ytgif-button-primary')).click();
+        await jsClick(driver, '.ytgif-button-primary');
       }
 
       // During processing, try to play/pause video
@@ -461,10 +467,10 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
         return elements.length > 0;
       }, 15000);
 
-      await driver.findElement(By.css('.ytgif-button')).click();
+      await jsClick(driver, '.ytgif-button');
       await driver.sleep(1000);
 
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       // Check if on text overlay screen
@@ -605,10 +611,10 @@ describe('Mock E2E: Error Handling (Selenium)', () => {
         return elements.length > 0;
       }, 15000);
 
-      await driver.findElement(By.css('.ytgif-button')).click();
+      await jsClick(driver, '.ytgif-button');
       await driver.sleep(1000);
 
-      await driver.findElement(By.css('.ytgif-button-primary')).click();
+      await jsClick(driver, '.ytgif-button-primary');
       await driver.sleep(1000);
 
       // Check if on text overlay screen

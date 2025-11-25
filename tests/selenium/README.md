@@ -1,6 +1,6 @@
 # Selenium WebDriver E2E Tests
 
-Automated Firefox extension testing using Selenium WebDriver with automatic extension loading.
+Automated Firefox extension testing using Selenium WebDriver with mock YouTube server.
 
 ## Quick Start
 
@@ -9,9 +9,9 @@ Automated Firefox extension testing using Selenium WebDriver with automatic exte
 npm run test:selenium:poc           # Headless
 npm run test:selenium:poc:headed    # Headed (visual)
 
-# Run E2E tests
-npm run test:selenium               # Headless
-npm run test:selenium:headed        # Headed (visual)
+# Run Mock E2E tests
+npm run test:selenium:mock          # Headless
+npm run test:selenium:mock:headed   # Headed (visual)
 ```
 
 ## Why Selenium?
@@ -31,12 +31,9 @@ npm run test:selenium:headed        # Headed (visual)
 ```
 tests/selenium/
 ├── README.md                    # This file
-├── MIGRATION-STATUS.md          # Migration progress tracker
-├── POC-RESULTS.md               # POC validation results
-│
 ├── firefox-driver.ts            # Driver factory (auto-loads extension)
 ├── test-utils.ts                # Test utilities (wait, click, etc.)
-├── jest.config.cjs              # Jest configuration
+├── jest.config.mock.cjs         # Jest configuration for mock tests
 │
 ├── page-objects/                # Page Object Models
 │   ├── YouTubePage.ts
@@ -46,8 +43,20 @@ tests/selenium/
 │   ├── SuccessPage.ts
 │   └── index.ts
 │
-├── tests/                       # Test files
-│   └── basic-wizard.test.ts     # Template test (✅ PASSING)
+├── helpers/                     # Test helpers
+│   ├── mock-server.ts           # Mock YouTube server
+│   ├── mock-videos.ts           # Test video definitions
+│   ├── gif-validator-mock.ts    # GIF validation utilities
+│   └── index.ts
+│
+├── tests-mock/                  # Mock E2E tests (CI-safe)
+│   ├── wizard-basic.test.ts     # Basic wizard tests
+│   ├── wizard-settings-matrix.test.ts
+│   ├── error-handling.test.ts
+│   ├── gif-output-validation.test.ts
+│   ├── freeze-frames.test.ts    # Freeze frame bug fix tests
+│   ├── long-timestamps.test.ts  # Long video timestamp tests
+│   └── ...
 │
 └── poc-test.ts                  # Standalone POC validation
 ```
@@ -61,14 +70,14 @@ npm run test:selenium:poc           # Headless (CI mode)
 npm run test:selenium:poc:headed    # Headed (watch browser)
 ```
 
-### E2E Tests
+### Mock E2E Tests
 ```bash
 # Run all tests
-npm run test:selenium               # Headless
-npm run test:selenium:headed        # Headed
+npm run test:selenium:mock          # Headless
+npm run test:selenium:mock:headed   # Headed
 
 # Run specific test
-npm run test:selenium:headed -- --testNamePattern="should load extension"
+npm run test:selenium:mock:headed -- --testNamePattern="should load extension"
 ```
 
 ## Writing Tests
@@ -282,6 +291,34 @@ See `MIGRATION-STATUS.md` for detailed migration options:
 
 ---
 
-**Status**: ✅ Proven and Working
-**Last Updated**: 2025-10-21
-**Contact**: See MIGRATION-STATUS.md for details
+## Historical: Real E2E Tests (Removed)
+
+Real YouTube E2E tests were removed due to:
+- YouTube IP blocking in CI environments
+- Consistent local test failures
+- Comprehensive mock coverage (90+ tests)
+
+### Freeze Frame Bug Reference
+
+**Bug**: GIF creation failed at frame 48/72 when processing videos with 15+
+consecutive identical frames (static content like freeze frames).
+
+**Root Cause**: Original logic treated all duplicate frames as buffering stuck,
+aborting unnecessarily on valid static content.
+
+**Fix Location**: `src/content/gif-processor.ts`
+
+**Fix Logic**: Differentiates between seek failure (buffering stuck) and
+successful seek with duplicate frame (valid static content).
+
+**Original Test Video**: `https://www.youtube.com/watch?v=NBZv0_MImIY&t=529s`
+- 8:49 timestamp with ~15 consecutive duplicate frames
+- Duration: 4.8 seconds at 15 fps = 72 frames expected
+
+This scenario is now covered by `tests-mock/freeze-frames.test.ts` using a
+synthetic video with intentional freeze frames.
+
+---
+
+**Status**: Mock E2E Only
+**Last Updated**: 2025-11

@@ -32,13 +32,11 @@ npm run lint              # Validate with web-ext
 ```bash
 npm run validate          # Full local validation (typecheck, lint, unit tests)
 npm test                  # Unit tests
-npm run test:selenium:real      # Real E2E headless (REQUIRED locally before PR)
-npm run test:selenium:real:headed
 npm run test:selenium:mock      # Mock E2E headless (CI-safe)
 npm run test:selenium:mock:headed
 ```
 
-Real E2E tests cannot run in CI (YouTube blocks CI IPs). Run headless locally before submitting PRs. Use `:headed` suffix for visible browser debugging.
+Mock E2E tests use localhost server with generated test videos. Use `:headed` suffix for visible browser debugging.
 
 ### Loading Extension
 1. `npm run build`
@@ -119,8 +117,7 @@ Centralized in `src/lib/errors.ts`. All async operations wrapped in try-catch wi
 ### Testing Infrastructure
 - **Selenium WebDriver** for E2E tests (Firefox-compatible)
 - **geckodriver** for Firefox automation
-- Real E2E: `tests/selenium/real/` (actual YouTube videos)
-- Mock E2E: `tests/selenium/mock/` (localhost test videos)
+- Mock E2E: `tests/selenium/tests-mock/` (localhost test videos)
 - Jest for unit tests
 
 ## File Organization
@@ -139,7 +136,7 @@ Centralized in `src/lib/errors.ts`. All async operations wrapped in try-catch wi
 Generate with `npm run generate:test-videos`. Use `getMockVideoUrl('veryShort', mockServerUrl)` helper.
 
 ### E2E Guidelines
-Real E2E: Use actual YouTube URLs, stable short videos, handle consent popups. Mock E2E: Use `getMockVideoUrl()` helper, localhost server.
+Mock E2E: Use `getMockVideoUrl()` helper with localhost server. Available videos: `veryShort` (20s), `medium` (10s), `long` (20s), `hd` (15s), `freezeFrame` (6s with 2s freeze), `longTimestamp` (60s).
 
 ## Common Development Tasks
 

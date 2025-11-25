@@ -28,16 +28,6 @@ export {
   type TestVideoMetadata,
 } from './mock-videos';
 
-// Test videos (real YouTube)
-export {
-  TEST_VIDEOS,
-  getVideoByDuration as getRealVideoByDuration,
-  getStableVideos,
-  DEFAULT_TEST_VIDEO,
-  getTimeoutForVideo as getRealVideoTimeout,
-  type TestVideo,
-} from './test-videos';
-
 // GIF validator (mock E2E)
 export {
   extractGifMetadata as extractGifMetadataFromUrl,
@@ -55,21 +45,6 @@ export {
   type GifMetadata as MockGifMetadata,
   type ResolutionSpec as MockResolutionSpec,
 } from './gif-validator-mock';
-
-// GIF validator (real E2E)
-export {
-  extractGifMetadata as extractGifMetadataFromFile,
-  validateResolution,
-  validateFrameRate,
-  validateDuration,
-  validateFileSize,
-  validateGifDataUrl,
-  validateTextOverlay,
-  validateGifComplete,
-  RESOLUTION_SPECS,
-  type GifMetadata,
-  type ResolutionSpec,
-} from './gif-validator';
 
 // Extension helpers
 export {
