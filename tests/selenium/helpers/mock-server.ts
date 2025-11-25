@@ -321,6 +321,20 @@ export class MockYouTubeServer {
         duration: 15,
         width: 1920,
         height: 1080
+      },
+      'mock-freeze': {
+        title: 'Test Video with Freeze Frames (6s)',
+        src: '/videos/test-freeze-6s.webm',
+        duration: 6,
+        width: 640,
+        height: 360
+      },
+      'mock-long-60': {
+        title: 'Test Long Video (60s)',
+        src: '/videos/test-long-60s.webm',
+        duration: 60,
+        width: 640,
+        height: 360
       }
     };
 

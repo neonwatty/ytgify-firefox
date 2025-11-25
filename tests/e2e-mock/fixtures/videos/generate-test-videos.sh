@@ -48,6 +48,20 @@ ffmpeg -f lavfi -i testsrc=duration=15:size=1920x1080:rate=30 \
   -c:v libvpx-vp9 -crf 30 -b:v 0 -g 15 -keyint_min 15 \
   -y test-hd-15s.webm 2>&1 | grep -i "video\|duration\|error" || true
 
+# Generate 6-second video with freeze frames (4s animation + 2s frozen)
+# This tests the duplicate frame detection bug fix (frame 48/72 failure scenario)
+echo "📹 Generating test-freeze-6s.webm (640x360, 6s with 2s freeze section)..."
+ffmpeg -f lavfi -i "testsrc=duration=4:size=640x360:rate=30,tpad=stop_mode=clone:stop_duration=2" \
+  -c:v libvpx-vp9 -crf 30 -b:v 0 -g 15 -keyint_min 15 \
+  -y test-freeze-6s.webm 2>&1 | grep -i "video\|duration\|error" || true
+
+# Generate 60-second long video for timestamp testing
+# Tests seeking to timestamps > 30s, timeline navigation at various points
+echo "📹 Generating test-long-60s.webm (640x360, 60s for timestamp testing)..."
+ffmpeg -f lavfi -i testsrc=duration=60:size=640x360:rate=30 \
+  -c:v libvpx-vp9 -crf 30 -b:v 0 -g 15 -keyint_min 15 \
+  -y test-long-60s.webm 2>&1 | grep -i "video\|duration\|error" || true
+
 echo ""
 echo "✅ Test videos generated successfully!"
 echo ""

@@ -173,23 +173,35 @@ export class QuickCapturePage {
   }
 
   async clickNext(): Promise<void> {
-    // Try primary button first, then fallback to button with "Next" text
-    const selectors = ['.ytgif-button-primary', 'button'];
+    // Wait for Next button to be visible before clicking (handles parallel test resource contention)
+    const maxWait = 15000;
+    const startTime = Date.now();
 
-    for (const selector of selectors) {
+    while (Date.now() - startTime < maxWait) {
+      // Try primary button first
       try {
-        if (selector === 'button') {
-          const xpath = '//button[contains(text(), "Next")]';
-          const element = await this.driver.findElement(By.xpath(xpath));
-          await element.click();
-        } else {
-          await clickElement(this.driver, selector);
+        const primaryBtn = await findElement(this.driver, '.ytgif-button-primary');
+        if (primaryBtn) {
+          await this.driver.executeScript('arguments[0].click();', primaryBtn);
+          await sleep(this.driver, 500);
+          return;
         }
+      } catch {
+        // Continue to next attempt
+      }
+
+      // Try button with "Next" text
+      try {
+        const xpath = '//button[contains(text(), "Next")]';
+        const element = await this.driver.findElement(By.xpath(xpath));
+        await this.driver.executeScript('arguments[0].click();', element);
         await sleep(this.driver, 500);
         return;
       } catch {
-        continue;
+        // Continue waiting
       }
+
+      await sleep(this.driver, 500);
     }
     throw new Error('Next button not found');
   }

@@ -36,8 +36,6 @@
     "test:all": "npm test && npm run test:e2e:mock",
     "test:selenium:poc": "tsx tests/selenium/poc-test.ts",
     "test:selenium:poc:headed": "HEADLESS=false tsx tests/selenium/poc-test.ts",
-    "test:selenium:real": "jest --config tests/selenium/jest.config.cjs",
-    "test:selenium:real:headed": "HEADLESS=false jest --config tests/selenium/jest.config.cjs",
     "test:selenium:mock": "jest --config tests/selenium/jest.config.mock.cjs",
     "test:selenium:mock:headed": "HEADLESS=false jest --config tests/selenium/jest.config.mock.cjs"
   },

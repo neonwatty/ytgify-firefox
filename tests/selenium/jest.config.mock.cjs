@@ -33,6 +33,6 @@ module.exports = {
   testTimeout: 90000, // 90 seconds per test
   verbose: true,
   bail: false, // Continue running tests even if one fails
-  maxWorkers: 1, // Run tests sequentially within each shard (parallelization happens at shard level)
+  maxWorkers: 4, // Run tests in parallel with 4 workers
   forceExit: true, // Force Jest to exit after tests complete (needed for Selenium cleanup)
 };

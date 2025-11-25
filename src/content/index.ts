@@ -720,11 +720,11 @@ class YouTubeGifMaker {
 
   private showWizardOverlay(message: ShowTimelineRequest) {
     try {
-      // Inject CSS before showing overlay
-      this.injectCSS();
-
-      // Remove existing overlay
+      // Remove existing overlay first (this also removes CSS)
       this.hideTimelineOverlay();
+
+      // Inject CSS after cleanup
+      this.injectCSS();
 
       const { videoDuration, currentTime } = message.data;
       const videoTitle = document.title.replace(' - YouTube', '');
@@ -1492,6 +1492,9 @@ class YouTubeGifMaker {
       this.timelineOverlay.remove();
       this.timelineOverlay = null;
     }
+
+    // Remove injected CSS to prevent style conflicts with YouTube
+    this.removeCSS();
 
     this.currentSelection = null;
     this.log('debug', '[Content] Timeline overlay hidden');
