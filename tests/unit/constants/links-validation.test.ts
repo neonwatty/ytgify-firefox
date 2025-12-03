@@ -1,5 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import https from 'https';
+import fs from 'fs';
+import path from 'path';
 import { LINKS } from '@/constants/links';
 import { EXTERNAL_SURVEY_URL } from '@/constants/features';
 
@@ -78,5 +80,77 @@ describeOrSkip('External Links Validation', () => {
     // Accept 2xx and 3xx status codes
     expect(statusCode).toBeGreaterThanOrEqual(200);
     expect(statusCode).toBeLessThan(400);
+  });
+});
+
+/**
+ * Recursively get all TypeScript/TSX files in a directory
+ */
+function getSourceFiles(dir: string, files: string[] = []): string[] {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory() && entry.name !== 'node_modules' && entry.name !== 'dist') {
+      getSourceFiles(fullPath, files);
+    } else if (entry.isFile() && /\.(ts|tsx)$/.test(entry.name)) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+describe('No Hardcoded External URLs', () => {
+  // Patterns for external URLs that should use LINKS constants
+  const externalUrlPatterns = [
+    /['"`]https?:\/\/discord\.gg\/[^'"`]+['"`]/g,
+    /['"`]https?:\/\/addons\.mozilla\.org\/[^'"`]+['"`]/g,
+  ];
+
+  // Files that are allowed to have hardcoded URLs (the constants file itself)
+  const allowedFiles = [
+    'src/constants/links.ts',
+    'src/constants/features.ts',
+  ];
+
+  it('should not have hardcoded Discord or Mozilla Add-ons URLs outside of constants', () => {
+    const srcDir = path.resolve(__dirname, '../../../src');
+    const sourceFiles = getSourceFiles(srcDir);
+    const violations: { file: string; line: number; url: string }[] = [];
+
+    for (const filePath of sourceFiles) {
+      const relativePath = path.relative(path.resolve(__dirname, '../../..'), filePath);
+
+      // Skip allowed files
+      if (allowedFiles.some(allowed => relativePath.replace(/\\/g, '/').endsWith(allowed))) {
+        continue;
+      }
+
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const lines = content.split('\n');
+
+      for (let i = 0; i < lines.length; i++) {
+        for (const pattern of externalUrlPatterns) {
+          const matches = lines[i].match(pattern);
+          if (matches) {
+            for (const match of matches) {
+              violations.push({
+                file: relativePath,
+                line: i + 1,
+                url: match,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    if (violations.length > 0) {
+      const message = violations
+        .map(v => `  ${v.file}:${v.line} - ${v.url}`)
+        .join('\n');
+      throw new Error(
+        `Found hardcoded external URLs. Use LINKS constants instead:\n${message}`
+      );
+    }
   });
 });
