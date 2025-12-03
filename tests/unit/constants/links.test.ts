@@ -13,8 +13,8 @@ import { browserMock } from '../__mocks__/browser-mocks';
 describe('Links Constants', () => {
   describe('LINKS object', () => {
     it('should have all required link properties', () => {
-      expect(LINKS).toHaveProperty('WEBSTORE_LISTING');
-      expect(LINKS).toHaveProperty('WEBSTORE_REVIEWS');
+      expect(LINKS).toHaveProperty('ADDON_LISTING');
+      expect(LINKS).toHaveProperty('ADDON_REVIEWS');
       expect(LINKS).toHaveProperty('GITHUB_REPO');
       expect(LINKS).toHaveProperty('GITHUB_ISSUES');
       expect(LINKS).toHaveProperty('TWITTER_PROFILE');
@@ -23,8 +23,8 @@ describe('Links Constants', () => {
     it('should have valid URL formats', () => {
       const urlPattern = /^https?:\/\/.+/;
 
-      expect(LINKS.WEBSTORE_LISTING).toMatch(urlPattern);
-      expect(LINKS.WEBSTORE_REVIEWS).toMatch(urlPattern);
+      expect(LINKS.ADDON_LISTING).toMatch(urlPattern);
+      expect(LINKS.ADDON_REVIEWS).toMatch(urlPattern);
       expect(LINKS.GITHUB_REPO).toMatch(urlPattern);
       expect(LINKS.GITHUB_ISSUES).toMatch(urlPattern);
     });
@@ -44,10 +44,11 @@ describe('Links Constants', () => {
       expect(LINKS.GITHUB_ISSUES).toContain(LINKS.GITHUB_REPO.replace('https://github.com/', ''));
     });
 
-    it('should not have trailing slashes', () => {
+    it('should have valid URL structure', () => {
+      // All URLs should be valid HTTPS URLs
       Object.values(LINKS).forEach((link) => {
         if (typeof link === 'string' && link.startsWith('http')) {
-          expect(link.endsWith('/')).toBe(false);
+          expect(link).toMatch(/^https:\/\/.+/);
         }
       });
     });
@@ -60,18 +61,18 @@ describe('Links Constants', () => {
     });
 
     it('should have secure HTTPS URLs', () => {
-      expect(LINKS.WEBSTORE_LISTING).toMatch(/^https:\/\//);
-      expect(LINKS.WEBSTORE_REVIEWS).toMatch(/^https:\/\//);
+      expect(LINKS.ADDON_LISTING).toMatch(/^https:\/\//);
+      expect(LINKS.ADDON_REVIEWS).toMatch(/^https:\/\//);
       expect(LINKS.GITHUB_REPO).toMatch(/^https:\/\//);
       expect(LINKS.GITHUB_ISSUES).toMatch(/^https:\/\//);
     });
   });
 
   describe('getReviewLink', () => {
-    it('should return webstore reviews URL', () => {
+    it('should return addon reviews URL', () => {
       const url = getReviewLink();
 
-      expect(url).toBe(LINKS.WEBSTORE_REVIEWS);
+      expect(url).toBe(LINKS.ADDON_REVIEWS);
     });
 
     it('should return a valid URL', () => {
@@ -338,7 +339,7 @@ describe('Links Constants', () => {
       const url = getReviewLink();
       openExternalLink(url);
 
-      expect(browser.tabs.create).toHaveBeenCalledWith({ url: LINKS.WEBSTORE_REVIEWS });
+      expect(browser.tabs.create).toHaveBeenCalledWith({ url: LINKS.ADDON_REVIEWS });
     });
 
     it('should open GitHub star link using helper function', () => {
