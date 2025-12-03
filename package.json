@@ -1,6 +1,6 @@
 {
   "name": "ytgify-firefox",
-  "version": "1.0.13",
+  "version": "1.0.15",
   "description": "YTgify for Firefox - Turn your favorite YouTube moments into shareable GIFs.",
   "private": true,
   "type": "module",
@@ -37,7 +37,8 @@
     "test:selenium:poc": "tsx tests/selenium/poc-test.ts",
     "test:selenium:poc:headed": "HEADLESS=false tsx tests/selenium/poc-test.ts",
     "test:selenium:mock": "jest --config tests/selenium/jest.config.mock.cjs",
-    "test:selenium:mock:headed": "HEADLESS=false jest --config tests/selenium/jest.config.mock.cjs"
+    "test:selenium:mock:headed": "HEADLESS=false jest --config tests/selenium/jest.config.mock.cjs",
+    "test:links": "jest --config tests/jest.config.cjs tests/unit/constants/links-validation.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

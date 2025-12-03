@@ -43,6 +43,7 @@ export default defineConfig({
             // Firefox preferences for extension testing
             'xpinstall.signatures.required': false,
             'extensions.webextensions.uuids': `{"ytgify@firefox.extension":"mock-uuid"}`,
+            'media.volume_scale': '0.0', // Mute audio during tests
           },
           args: [
             '--no-remote',
