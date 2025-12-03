@@ -1,6 +1,6 @@
 {
   "name": "ytgify-firefox",
-  "version": "1.0.15",
+  "version": "1.0.14",
   "description": "YTgify for Firefox - Turn your favorite YouTube moments into shareable GIFs.",
   "private": true,
   "type": "module",
