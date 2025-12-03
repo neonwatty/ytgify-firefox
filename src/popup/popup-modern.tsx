@@ -2,7 +2,7 @@ import React from 'react';
 import { ShowTimelineRequest } from '@/types';
 import { engagementTracker } from '@/shared/engagement-tracker';
 import { feedbackTracker } from '@/shared/feedback-tracker';
-import { openExternalLink, getReviewLink } from '@/constants/links';
+import { openExternalLink, getReviewLink, LINKS } from '@/constants/links';
 import { EXTERNAL_SURVEY_URL } from '@/constants/features';
 
 const PopupApp: React.FC = () => {
@@ -112,7 +112,7 @@ const PopupApp: React.FC = () => {
   };
 
   const handleJoinDiscord = () => {
-    openExternalLink('https://discord.gg/8EUxqR93');
+    openExternalLink(LINKS.DISCORD_INVITE);
   };
 
   const handleSurveyClick = async () => {
