@@ -130,7 +130,7 @@ jobs:
       - name: Run mock E2E tests (Shard ${{ matrix.shard }}/3)
         env:
           HEADLESS: true
-        run: npm run test:selenium:mock -- --testPathPattern="${{ matrix.pattern }}"
+        run: npm run test:e2e -- --testPathPattern="${{ matrix.pattern }}"
 
       - name: Upload test artifacts on failure
         if: failure()
