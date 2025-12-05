@@ -1,4 +1,4 @@
-import { FeedbackData, FeatureVote } from '@/types/storage';
+import { FeedbackData } from '@/types/storage';
 import { engagementTracker } from './engagement-tracker';
 
 const STORAGE_KEY = 'feedback-data';
@@ -43,10 +43,8 @@ class FeedbackTracker {
   private getDefaultData(): FeedbackData {
     return {
       feedbackShown: {},
-      featureVotes: [],
-      suggestions: [],
       surveyClicked: false,
-      feedbackSubmitted: false,
+      permanentlyDismissed: false,
     };
   }
 
@@ -57,6 +55,10 @@ class FeedbackTracker {
     count: 10 | 25 | 50
   ): Promise<boolean> {
     const data = await this.getStorageData();
+
+    // Don't show if permanently dismissed
+    if (data.permanentlyDismissed) return false;
+
     const engagement = await engagementTracker.getEngagementStats();
 
     // Check if at exact milestone count
@@ -74,6 +76,10 @@ class FeedbackTracker {
    */
   async shouldShowTimeFeedback(): Promise<boolean> {
     const data = await this.getStorageData();
+
+    // Don't show if permanently dismissed
+    if (data.permanentlyDismissed) return false;
+
     const engagement = await engagementTracker.getEngagementStats();
 
     // Already shown time-based feedback
@@ -97,12 +103,11 @@ class FeedbackTracker {
    */
   async shouldShowPostSuccessFeedback(): Promise<boolean> {
     const data = await this.getStorageData();
-    const engagement = await engagementTracker.getEngagementStats();
 
-    // Already submitted feedback
-    if (data.feedbackSubmitted) {
-      return false;
-    }
+    // Don't show if permanently dismissed
+    if (data.permanentlyDismissed) return false;
+
+    const engagement = await engagementTracker.getEngagementStats();
 
     // Already shown post-success recently (within 24 hours)
     if (data.feedbackShown.postSuccess) {
@@ -154,29 +159,11 @@ class FeedbackTracker {
   }
 
   /**
-   * Record feedback submission with votes and optional suggestion
+   * Record that user permanently dismissed feedback prompts
    */
-  async recordFeedbackSubmitted(
-    featureVotes: FeatureVote[],
-    suggestion?: string,
-    _fromSurvey = false
-  ): Promise<void> {
+  async recordPermanentDismiss(): Promise<void> {
     const data = await this.getStorageData();
-
-    // Update feature votes
-    data.featureVotes = featureVotes;
-
-    // Add suggestion if provided
-    if (suggestion && suggestion.trim()) {
-      data.suggestions.push({
-        text: suggestion.trim(),
-        submittedAt: Date.now(),
-      });
-    }
-
-    data.feedbackSubmitted = true;
-    data.feedbackSubmittedAt = Date.now();
-
+    data.permanentlyDismissed = true;
     await this.setStorageData(data);
   }
 
