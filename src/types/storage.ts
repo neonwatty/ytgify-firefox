@@ -82,21 +82,6 @@ export interface EngagementData {
   popupFooterDismissed: boolean;
 }
 
-// Proposed feature for voting
-export interface ProposedFeature {
-  id: string;
-  name: string;
-  description: string;
-  category: 'storage' | 'community' | 'sharing' | 'editing' | 'integration';
-}
-
-// Feature vote record
-export interface FeatureVote {
-  featureId: string;
-  vote: 'up' | 'down';
-  votedAt: number;
-}
-
 // Feedback tracking data
 export interface FeedbackData {
   // Tracking when feedback was shown
@@ -107,17 +92,9 @@ export interface FeedbackData {
     timeBased?: number;
     postSuccess?: number;
   };
-  // User's feature votes
-  featureVotes: FeatureVote[];
-  // Free-form suggestions
-  suggestions: Array<{
-    text: string;
-    submittedAt: number;
-  }>;
   // Survey clicks
   surveyClicked: boolean;
   surveyClickedAt?: number;
-  // Feedback submissions
-  feedbackSubmitted: boolean;
-  feedbackSubmittedAt?: number;
+  // Permanent dismissal
+  permanentlyDismissed: boolean;
 }

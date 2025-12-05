@@ -10,308 +10,121 @@ import { browserMock, resetBrowserMocks } from '../__mocks__/browser-mocks';
 // Mock the CSS file
 jest.mock('../../../src/content/wizard-styles.css', () => ({}));
 
-// Mock the feedback tracker
-const mockRecordSurveyClicked = jest.fn();
-const mockRecordFeedbackSubmitted = jest.fn();
-jest.mock('../../../src/shared/feedback-tracker', () => ({
-  feedbackTracker: {
-    recordSurveyClicked: () => mockRecordSurveyClicked(),
-    recordFeedbackSubmitted: (
-      featureVotes: any,
-      suggestion?: string,
-      fromSurvey?: boolean
-    ) => mockRecordFeedbackSubmitted(featureVotes, suggestion, fromSurvey),
-  },
+// Mock features module
+jest.mock('../../../src/constants/features', () => ({
+  EXTERNAL_SURVEY_URL: 'https://forms.gle/mock-survey-id',
 }));
 
-// Mock openExternalLink
+// Mock links module
 const mockOpenExternalLink = jest.fn();
 jest.mock('../../../src/constants/links', () => ({
   openExternalLink: (url: string) => mockOpenExternalLink(url),
 }));
 
+// Mock feedback tracker
+const mockRecordSurveyClicked = jest.fn().mockResolvedValue(undefined);
+const mockRecordPermanentDismiss = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../../src/shared/feedback-tracker', () => ({
+  feedbackTracker: {
+    recordSurveyClicked: () => mockRecordSurveyClicked(),
+    recordPermanentDismiss: () => mockRecordPermanentDismiss(),
+  },
+}));
+
 describe('FeedbackModal Component', () => {
-  const mockOnClose = jest.fn();
-  const mockOnSubmit = jest.fn();
+  const defaultProps = {
+    onClose: jest.fn(),
+    onPermanentDismiss: jest.fn(),
+  };
 
   beforeEach(() => {
     resetBrowserMocks(browserMock);
     jest.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('should render with post-success trigger', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      expect(screen.getByText('Nice GIF!')).toBeInTheDocument();
+  describe('Header and Content', () => {
+    it('should render header text', () => {
+      render(<FeedbackModal {...defaultProps} />);
       expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
     });
 
-    it('should render with milestone trigger', () => {
-      render(
-        <FeedbackModal
-          trigger="milestone"
-          milestoneCount={10}
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      expect(screen.getByText("You've created 10 GIFs!")).toBeInTheDocument();
-    });
-
-    it('should render with time trigger', () => {
-      render(
-        <FeedbackModal
-          trigger="time"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      expect(screen.getByText('Thanks for using YTGify!')).toBeInTheDocument();
-    });
-
-    it('should render all feature vote cards', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      expect(screen.getByText('Save to Cloud')).toBeInTheDocument();
-      expect(screen.getByText('Community Gallery')).toBeInTheDocument();
-      expect(screen.getByText('Slack Integration')).toBeInTheDocument();
-      expect(screen.getByText('Discord Integration')).toBeInTheDocument();
-    });
-
-    it('should render suggestion textarea', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      expect(screen.getByText('Have another idea?')).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText(
-          'Tell us what feature would make YTGify better...'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('should render action buttons', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      expect(screen.getByText('Maybe Later')).toBeInTheDocument();
-      expect(screen.getByText('Submit Feedback')).toBeInTheDocument();
-    });
-
-    it('should render survey link button', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      expect(screen.getByText('Take detailed survey')).toBeInTheDocument();
+    it('should render subtitle', () => {
+      render(<FeedbackModal {...defaultProps} />);
+      expect(screen.getByText('Your feedback helps shape future features')).toBeInTheDocument();
     });
   });
 
-  describe('User Interactions', () => {
-    it('should call onClose when clicking close button', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      const closeButton = screen.getByLabelText('Close');
-      fireEvent.click(closeButton);
-
-      expect(mockOnClose).toHaveBeenCalled();
+  describe('Take Survey Button', () => {
+    it('should render Take Survey button', () => {
+      render(<FeedbackModal {...defaultProps} />);
+      expect(screen.getByText('Take Survey')).toBeInTheDocument();
     });
 
-    it('should call onClose when clicking Maybe Later', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
+    it('should open external URL when clicking Take Survey', async () => {
+      render(<FeedbackModal {...defaultProps} />);
 
-      const maybeLaterButton = screen.getByText('Maybe Later');
-      fireEvent.click(maybeLaterButton);
+      const surveyButton = screen.getByText('Take Survey');
+      fireEvent.click(surveyButton);
 
-      expect(mockOnClose).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(mockOpenExternalLink).toHaveBeenCalledWith('https://forms.gle/mock-survey-id');
+      });
     });
 
-    it('should handle survey link click', async () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
+    it('should record survey click and close modal when clicking Take Survey', async () => {
+      const onClose = jest.fn();
+      render(<FeedbackModal {...defaultProps} onClose={onClose} />);
 
-      const surveyButton = screen.getByText('Take detailed survey');
+      const surveyButton = screen.getByText('Take Survey');
       fireEvent.click(surveyButton);
 
       await waitFor(() => {
         expect(mockRecordSurveyClicked).toHaveBeenCalled();
-        expect(mockOpenExternalLink).toHaveBeenCalled();
-      });
-    });
-
-    it('should allow typing in suggestion textarea', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      const textarea = screen.getByPlaceholderText(
-        'Tell us what feature would make YTGify better...'
-      );
-      fireEvent.change(textarea, { target: { value: 'Add dark mode' } });
-
-      expect(textarea).toHaveValue('Add dark mode');
-    });
-
-    it('should submit feedback and call onSubmit', async () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      const submitButton = screen.getByText('Submit Feedback');
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(mockRecordFeedbackSubmitted).toHaveBeenCalled();
-        expect(mockOnSubmit).toHaveBeenCalled();
-      });
-    });
-
-    it('should submit feedback with suggestion', async () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      const textarea = screen.getByPlaceholderText(
-        'Tell us what feature would make YTGify better...'
-      );
-      fireEvent.change(textarea, { target: { value: 'Add dark mode' } });
-
-      const submitButton = screen.getByText('Submit Feedback');
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(mockRecordFeedbackSubmitted).toHaveBeenCalledWith(
-          expect.any(Array),
-          'Add dark mode',
-          false
-        );
+        expect(onClose).toHaveBeenCalled();
       });
     });
   });
 
-  describe('Feature Voting', () => {
-    it('should toggle upvote for a feature', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
-
-      // Find and click upvote button for Cloud Storage feature
-      const upvoteButtons = screen.getAllByLabelText(/Upvote/);
-      expect(upvoteButtons.length).toBeGreaterThan(0);
-      fireEvent.click(upvoteButtons[0]);
-
-      // Button should have active class
-      expect(upvoteButtons[0]).toHaveClass('ytgif-vote-btn--active');
+  describe('Dont Show Again Button', () => {
+    it('should render Dont show again button', () => {
+      render(<FeedbackModal {...defaultProps} />);
+      expect(screen.getByText("Don't show again")).toBeInTheDocument();
     });
 
-    it('should toggle downvote for a feature', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
+    it('should record permanent dismiss when clicking Dont show again', async () => {
+      const onPermanentDismiss = jest.fn();
+      render(<FeedbackModal {...defaultProps} onPermanentDismiss={onPermanentDismiss} />);
 
-      const downvoteButtons = screen.getAllByLabelText(/Downvote/);
-      expect(downvoteButtons.length).toBeGreaterThan(0);
-      fireEvent.click(downvoteButtons[0]);
+      const dismissButton = screen.getByText("Don't show again");
+      fireEvent.click(dismissButton);
 
-      expect(downvoteButtons[0]).toHaveClass('ytgif-vote-btn--active');
+      await waitFor(() => {
+        expect(mockRecordPermanentDismiss).toHaveBeenCalled();
+        expect(onPermanentDismiss).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Close Button', () => {
+    it('should render close button', () => {
+      render(<FeedbackModal {...defaultProps} />);
+      expect(screen.getByLabelText('Close')).toBeInTheDocument();
     });
 
-    it('should toggle off vote when clicking same button again', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
+    it('should call onClose when clicking close button', () => {
+      const onClose = jest.fn();
+      render(<FeedbackModal {...defaultProps} onClose={onClose} />);
 
-      const upvoteButtons = screen.getAllByLabelText(/Upvote/);
+      const closeButton = screen.getByLabelText('Close');
+      fireEvent.click(closeButton);
 
-      // Click once to vote
-      fireEvent.click(upvoteButtons[0]);
-      expect(upvoteButtons[0]).toHaveClass('ytgif-vote-btn--active');
-
-      // Click again to toggle off
-      fireEvent.click(upvoteButtons[0]);
-      expect(upvoteButtons[0]).not.toHaveClass('ytgif-vote-btn--active');
+      expect(onClose).toHaveBeenCalled();
     });
   });
 
   describe('Accessibility', () => {
     it('should have accessible close button', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
+      render(<FeedbackModal {...defaultProps} />);
 
       const closeButton = screen.getByLabelText('Close');
       expect(closeButton).toBeInTheDocument();
@@ -319,13 +132,7 @@ describe('FeedbackModal Component', () => {
     });
 
     it('should have proper button types', () => {
-      render(
-        <FeedbackModal
-          trigger="post-success"
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-        />
-      );
+      render(<FeedbackModal {...defaultProps} />);
 
       const buttons = screen.getAllByRole('button');
       buttons.forEach((button) => {
