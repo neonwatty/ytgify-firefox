@@ -12,7 +12,7 @@ export const LINKS = {
 
   // Social
   TWITTER_PROFILE: 'https://x.com/neonwatty',
-  DISCORD_INVITE: 'https://discord.gg/BC2Kn9Ne',
+  DISCORD_INVITE: 'https://discord.gg/ufrycqwb4R',
 
   // Documentation
   DOCS_USER_GUIDE: 'https://github.com/neonwatty/ytgify#user-guide'
