@@ -52,7 +52,7 @@ function checkUrl(url: string, maxRedirects = 5): Promise<number> {
         }
       );
       req.on('error', reject);
-      req.setTimeout(15000, () => {
+      req.setTimeout(30000, () => {
         req.destroy();
         reject(new Error('Request timeout'));
       });
@@ -62,8 +62,8 @@ function checkUrl(url: string, maxRedirects = 5): Promise<number> {
 }
 
 describeOrSkip('External Links Validation', () => {
-  // 30 second timeout for network requests
-  jest.setTimeout(30000);
+  // 60 second timeout for network requests (Google Forms can be slow)
+  jest.setTimeout(60000);
 
   it.each([
     ['ADDON_LISTING', LINKS.ADDON_LISTING],
