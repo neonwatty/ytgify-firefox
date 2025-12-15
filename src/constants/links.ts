@@ -46,3 +46,8 @@ export function getGitHubStarLink(): string {
 export function getDiscordLink(): string {
   return LINKS.DISCORD_INVITE;
 }
+
+// Helper to get waitlist link with UTM tracking
+export function getWaitlistLink(): string {
+  return 'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist';
+}
