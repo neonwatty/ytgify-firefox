@@ -3,6 +3,7 @@ import {
   LINKS,
   getReviewLink,
   getGitHubStarLink,
+  getWaitlistLink,
   openExternalLink,
 } from '@/constants/links';
 import { browserMock } from '../__mocks__/browser-mocks';
@@ -124,6 +125,42 @@ describe('Links Constants', () => {
 
     it('should not require parameters', () => {
       expect(getGitHubStarLink.length).toBe(0);
+    });
+  });
+
+  describe('getWaitlistLink', () => {
+    it('should return the waitlist URL with UTM parameters', () => {
+      const link = getWaitlistLink();
+      expect(link).toBe(
+        'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist'
+      );
+    });
+
+    it('should return a valid ytgify.com URL format', () => {
+      const link = getWaitlistLink();
+      expect(link).toMatch(/^https:\/\/ytgify\.com\/share\?/);
+    });
+
+    it('should include all required UTM parameters', () => {
+      const link = getWaitlistLink();
+      const url = new URL(link);
+      expect(url.searchParams.get('utm_source')).toBe('extension');
+      expect(url.searchParams.get('utm_medium')).toBe('success_screen');
+      expect(url.searchParams.get('utm_campaign')).toBe('waitlist');
+    });
+
+    it('should return same URL on multiple calls', () => {
+      const url1 = getWaitlistLink();
+      const url2 = getWaitlistLink();
+      expect(url1).toBe(url2);
+    });
+
+    it('should be a function', () => {
+      expect(typeof getWaitlistLink).toBe('function');
+    });
+
+    it('should not require parameters', () => {
+      expect(getWaitlistLink.length).toBe(0);
     });
   });
 
