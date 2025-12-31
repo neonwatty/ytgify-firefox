@@ -1078,9 +1078,9 @@ describe('SuccessScreen', () => {
       );
     });
 
-    it('should show coming soon subtext for Share This GIF', () => {
+    it('should show waitlist subtext for Share This GIF', () => {
       render(<SuccessScreen {...defaultProps} />);
-      expect(screen.getByText('Get a shareable link (coming soon)')).toBeInTheDocument();
+      expect(screen.getByText('Be first to know when sharing launches')).toBeInTheDocument();
     });
 
     it('should open Discord link when Join Discord is clicked', () => {
