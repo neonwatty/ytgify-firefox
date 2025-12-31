@@ -361,7 +361,7 @@ const PopupApp: React.FC = () => {
               </svg>
               <span>Join Discord</span>
             </button>
-            <p className="support-subtitle">Get help and stay updated</p>
+            <p className="support-subtitle">Report bugs and get help</p>
 
             {/* Survey Button */}
             <button
