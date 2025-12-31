@@ -39,13 +39,13 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
           else
-            VERSION=$(jq -r '.version' dist-production/manifest.json)
+            VERSION=$(jq -r '.version' dist/manifest.json)
             echo "version=$VERSION" >> $GITHUB_OUTPUT
           fi
 
       - name: Create release zip
         run: |
-          cd dist-production
+          cd dist
           zip -r ../ytgify-firefox-v${{ steps.version.outputs.version }}.zip .
 
       - name: Create GitHub Release
