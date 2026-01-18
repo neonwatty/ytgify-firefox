@@ -15,7 +15,8 @@ import { TrendingView } from './TrendingView';
 import PopupApp from '../popup-modern';
 
 // Declare browser namespace for Firefox
-declare const browser: typeof chrome;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const browser: any;
 
 /**
  * Auth-aware popup wrapper

@@ -13,7 +13,8 @@ import type { UserProfile, UploadedGif, GifListResponse, LikeResponse } from '@/
 import { GifCard } from './GifCard';
 
 // Declare browser namespace for Firefox
-declare const browser: typeof chrome;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const browser: any;
 
 interface UserProfileViewProps {
   onLogoutSuccess: () => void;

@@ -29,7 +29,8 @@ import type {
 } from '@/types/auth';
 
 // Declare browser namespace for Firefox
-declare const browser: typeof chrome;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const browser: any;
 
 /**
  * API Client class

@@ -11,7 +11,8 @@ import type { AuthState, UserProfile, AuthPreferences } from '@/types/auth';
 import type { UserPreferences } from '@/types/storage';
 
 // Declare browser namespace for Firefox
-declare const browser: typeof chrome;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const browser: any;
 
 /**
  * Storage adapter for Firefox

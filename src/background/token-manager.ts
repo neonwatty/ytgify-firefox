@@ -11,7 +11,8 @@ import { apiClient } from '@/lib/api/api-client';
 import { StorageAdapter } from '@/lib/storage/storage-adapter';
 
 // Declare browser namespace for Firefox
-declare const browser: typeof chrome;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const browser: any;
 
 /**
  * Token manager handles JWT lifecycle across event page restarts

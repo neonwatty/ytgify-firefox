@@ -9,7 +9,8 @@ import React, { useState } from 'react';
 import { apiClient, APIError, AuthError } from '@/lib/api/api-client';
 
 // Declare browser namespace for Firefox
-declare const browser: typeof chrome;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const browser: any;
 
 interface AuthViewProps {
   onLoginSuccess: () => void;
