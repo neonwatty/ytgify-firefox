@@ -10,8 +10,11 @@
   "scripts": {
     "dev": "npm-run-all --parallel dev:webpack dev:firefox",
     "dev:webpack": "webpack --config webpack.config.cjs --mode development --watch",
+    "dev:webpack:local": "API_BASE_URL=http://localhost:3000/api/v1 webpack --config webpack.config.cjs --mode development --watch",
     "dev:firefox": "web-ext run --source-dir dist --firefox-profile ytgify-dev --keep-profile-changes",
+    "dev:local": "npm-run-all --parallel dev:webpack:local dev:firefox",
     "build": "webpack --config webpack.config.cjs --mode production",
+    "build:local": "API_BASE_URL=http://localhost:3000/api/v1 webpack --config webpack.config.cjs --mode production",
     "build:production": "bash scripts/build-production.sh",
     "build:watch": "webpack --config webpack.config.cjs --mode development --watch",
     "clean": "rimraf dist",
