@@ -80,7 +80,7 @@ jobs:
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
-          repository: mean-weasel/ytgify-fullstack
+          repository: ytgify/ytgify-glue
           ref: ${{ steps.backend-ref.outputs.ref || steps.backend-ref.outputs.branch }}
           path: backend
 

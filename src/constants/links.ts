@@ -7,7 +7,7 @@ export const LINKS = {
 
   // GitHub
   GITHUB_REPO: 'https://github.com/ytgify/ytgify-firefox',
-  GITHUB_STARS: 'https://github.com/ytgify/ytgify-firefox/stargazers',
+  GITHUB_STARS: 'https://github.com/ytgify/ytgify-firefox',
   GITHUB_ISSUES: 'https://github.com/ytgify/ytgify-firefox/issues',
 
   // Social
