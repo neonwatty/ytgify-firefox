@@ -6,16 +6,16 @@ export const LINKS = {
   ADDON_REVIEWS: 'https://addons.mozilla.org/en-US/firefox/addon/ytgify-for-firefox/reviews/',
 
   // GitHub
-  GITHUB_REPO: 'https://github.com/neonwatty/ytgify',
-  GITHUB_STARS: 'https://github.com/neonwatty/ytgify/stargazers',
-  GITHUB_ISSUES: 'https://github.com/neonwatty/ytgify/issues',
+  GITHUB_REPO: 'https://github.com/ytgify/ytgify-firefox',
+  GITHUB_STARS: 'https://github.com/ytgify/ytgify-firefox/stargazers',
+  GITHUB_ISSUES: 'https://github.com/ytgify/ytgify-firefox/issues',
 
   // Social
   TWITTER_PROFILE: 'https://x.com/neonwatty',
   DISCORD_INVITE: 'https://discord.gg/ufrycqwb4R',
 
   // Documentation
-  DOCS_USER_GUIDE: 'https://github.com/neonwatty/ytgify#user-guide'
+  DOCS_USER_GUIDE: 'https://github.com/ytgify/ytgify-firefox#user-guide'
 } as const;
 
 // Helper to open external link in new tab
