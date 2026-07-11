@@ -525,7 +525,7 @@ global.browser = browser as any;
 
 ## References
 
-- **Chrome Extension PR #47:** https://github.com/neonwatty/ytgify/pull/47
+- **Chrome Extension PR #47:** https://github.com/ytgify/ytgify/pull/47
 - **Firefox Manifest API:** https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/getManifest
 - **Current Popup Implementation:** `src/popup/popup-modern.tsx`
 - **Current Popup Styles:** `src/popup/styles-modern.css`

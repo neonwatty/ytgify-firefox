@@ -235,7 +235,7 @@ describe('Social Templates', () => {
     });
 
     it('should handle URLs in text', () => {
-      const text = 'Check out https://github.com/neonwatty/ytgify';
+      const text = 'Check out https://github.com/ytgify/ytgify-firefox';
       const url = generateTwitterShareUrl(text);
 
       expect(url).toContain('text=');

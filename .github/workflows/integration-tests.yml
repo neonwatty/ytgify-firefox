@@ -1,27 +1,26 @@
 name: Integration Tests
 
 on:
-  # Triggered by backend repo when API changes
-  repository_dispatch:
-    types: [backend-integration-test]
+  # Temporarily disabled until CI has access to the private backend repo.
+  # repository_dispatch:
+  #   types: [backend-integration-test]
 
-  # Triggered on extension changes to integration-related files
-  push:
-    branches: [main, develop]
-    paths:
-      - 'src/**'
-      - 'tests/e2e-backend/**'
-      - 'tests/playwright-backend.config.ts'
-      - 'package.json'
-      - '.github/workflows/integration-tests.yml'
-  pull_request:
-    branches: [main, develop]
-    paths:
-      - 'src/**'
-      - 'tests/e2e-backend/**'
-      - 'tests/playwright-backend.config.ts'
-      - 'package.json'
-      - '.github/workflows/integration-tests.yml'
+  # push:
+  #   branches: [main, develop]
+  #   paths:
+  #     - 'src/**'
+  #     - 'tests/e2e-backend/**'
+  #     - 'tests/playwright-backend.config.ts'
+  #     - 'package.json'
+  #     - '.github/workflows/integration-tests.yml'
+  # pull_request:
+  #   branches: [main, develop]
+  #   paths:
+  #     - 'src/**'
+  #     - 'tests/e2e-backend/**'
+  #     - 'tests/playwright-backend.config.ts'
+  #     - 'package.json'
+  #     - '.github/workflows/integration-tests.yml'
 
   # Manual trigger for testing
   workflow_dispatch:
@@ -80,7 +79,7 @@ jobs:
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
-          repository: mean-weasel/ytgify-fullstack
+          repository: ytgify/ytgify-glue
           ref: ${{ steps.backend-ref.outputs.ref || steps.backend-ref.outputs.branch }}
           path: backend
 
