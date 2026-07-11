@@ -1,10 +1,10 @@
 name: Integration Tests
 
 on:
-  # TODO: Re-enable automatic integration tests when the backend repo is ready.
+  # Temporarily disabled until CI has access to the private backend repo.
   # repository_dispatch:
   #   types: [backend-integration-test]
-  #
+
   # push:
   #   branches: [main, develop]
   #   paths:
@@ -21,9 +21,6 @@ on:
   #     - 'tests/playwright-backend.config.ts'
   #     - 'package.json'
   #     - '.github/workflows/integration-tests.yml'
-  #
-  # merge_group:
-  #   branches: [main]
 
   # Manual trigger for testing
   workflow_dispatch:
@@ -82,7 +79,7 @@ jobs:
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
-          repository: mean-weasel/ytgify-fullstack
+          repository: ytgify/ytgify-glue
           ref: ${{ steps.backend-ref.outputs.ref || steps.backend-ref.outputs.branch }}
           path: backend
 

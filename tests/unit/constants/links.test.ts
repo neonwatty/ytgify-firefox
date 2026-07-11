@@ -172,7 +172,7 @@ describe('Links Constants', () => {
     });
 
     it('should point to correct repository', () => {
-      expect(LINKS.GITHUB_ISSUES).toContain('neonwatty/ytgify');
+      expect(LINKS.GITHUB_ISSUES).toContain('ytgify/ytgify-firefox');
     });
   });
 

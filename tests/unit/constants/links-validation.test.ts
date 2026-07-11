@@ -23,7 +23,7 @@ function checkUrl(url: string, maxRedirects = 5): Promise<number> {
         {
           headers: {
             'User-Agent':
-              'Mozilla/5.0 (compatible; YTgify-LinkChecker/1.0; +https://github.com/neonwatty/ytgify)',
+              'Mozilla/5.0 (compatible; YTgify-LinkChecker/1.0; +https://github.com/ytgify/ytgify-firefox)',
           },
         },
         (res) => {
